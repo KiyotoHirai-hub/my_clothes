@@ -660,15 +660,20 @@ function seedIfEmpty() {
   save();
 }
 
+
 /* =====================================================
    12. 初期化
+   ブラウザ環境でのみ実行する（Vercelがサーバーで
+   読み込んでもlocalStorageエラーにならないよう保護）
    ===================================================== */
 
-load();
-seedIfEmpty();
+if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+  load();
+  seedIfEmpty();
 
-if (document.getElementById('list')) {
-  render();
-  renderEmojiGrid();
-  loadWeather();
+  if (document.getElementById('list')) {
+    render();
+    renderEmojiGrid();
+    loadWeather();
+  }
 }
