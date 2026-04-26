@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>MY WARDROBE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ========== 天気バー ========== -->
+  <div class="weather-bar">
+    <div class="weather-bar-inner">
+      <span id="w-date">—</span>
+      <span id="w-icon" style="font-size:16px">⏳</span>
+      <span id="w-label"></span>
+      <span id="w-temp" class="w-temp"></span>
+      <span id="w-season" class="weather-season-badge"></span>
+    </div>
+  </div>
+
+  <!-- ========== HEADER ========== -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">MY <span>Wardrobe</span></div>
+      <div class="header-right">
+        <div class="header-count" id="header-count">— アイテム</div>
+        <!-- CSVインポートボタン -->
+        <label class="csv-import-btn" title="CSVから一括インポート">
+          📥 CSV
+          <input type="file" accept=".csv" id="csv-input" onchange="importCSV(event)" />
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== ツールバー ========== -->
+  <div class="toolbar">
+    <span class="toolbar-label">Sort</span>
+    <button class="chip active" onclick="setSort('count-desc',this)">着用↓</button>
+    <button class="chip"        onclick="setSort('count-asc', this)">着用↑</button>
+    <button class="chip"        onclick="setSort('name',      this)">名前順</button>
+    <button class="chip"        onclick="setSort('added',     this)">追加順</button>
+  </div>
+  <div class="toolbar" style="padding-top:6px; padding-bottom:12px">
+    <span class="toolbar-label">季節</span>
+    <button class="chip season active" data-s="all"    onclick="setSeason('all',   this)">すべて</button>
+    <button class="chip season"        data-s="winter" onclick="setSeason('winter',this)">❄ Winter</button>
+    <button class="chip season"        data-s="spring" onclick="setSeason('spring',this)">🌸 Spring/Fall</button>
+    <button class="chip season"        data-s="summer" onclick="setSeason('summer',this)">☀ Summer</button>
+  </div>
+
+  <!-- ========== アイテム一覧 ========== -->
+  <div class="grid" id="list"></div>
+
+  <!-- ========== FAB ========== -->
+  <button class="fab" onclick="openModal()">＋ アイテムを追加</button>
+
+  <!-- ========== 追加モーダル ========== -->
+  <div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+    <div class="modal">
+      <div class="modal-title">New Item</div>
+
+      <div class="field">
+        <label>写真（任意）</label>
+        <div class="photo-drop" id="modal-photo-area">
+          <div id="upload-icon">📷</div>
+          <div id="upload-text" class="upload-text">タップして写真を選択</div>
+          <input type="file" accept="image/*" id="modal-photo-input" onchange="previewPhoto(event)" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>アイテム名 <span class="req">*</span></label>
+        <input type="text" id="inp-name" placeholder="例: ホワイトTシャツ" maxlength="30" />
+      </div>
+      <div class="field">
+        <label>ブランド</label>
+        <input type="text" id="inp-brand" placeholder="例: Levi's" maxlength="30" />
+      </div>
+      <div class="field">
+        <label>カテゴリ</label>
+        <select id="inp-cat">
+          <option>ジャケット</option><option>アウター</option><option>パーカー</option>
+          <option>スウェット</option><option>シャツ</option><option>ニット</option>
+          <option>ベスト</option><option>パンツ</option><option>シューズ</option>
+          <option>バッグ</option><option>アクセサリー</option><option>その他</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>カラー</label>
+        <input type="text" id="inp-color" placeholder="例: navy" maxlength="20" />
+      </div>
+      <div class="field">
+        <label>季節タグ</label>
+        <div class="radio-row">
+          <label class="radio-opt"><input type="radio" name="inp-s" value="winter"><span>❄ Winter</span></label>
+          <label class="radio-opt"><input type="radio" name="inp-s" value="spring" checked><span>🌸 Spring/Fall</span></label>
+          <label class="radio-opt"><input type="radio" name="inp-s" value="summer"><span>☀ Summer</span></label>
+          <label class="radio-opt"><input type="radio" name="inp-s" value="all"><span>🔄 通年</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label>写真なしの場合のアイコン</label>
+        <div class="emoji-grid" id="emoji-grid"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-add"    onclick="addItem()">追加する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== CSVインポート確認モーダル ========== -->
+  <div class="modal-overlay" id="csv-modal" onclick="handleCsvOverlayClick(event)">
+    <div class="modal">
+      <div class="modal-title">CSV インポート</div>
+      <div id="csv-preview-text" style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:20px"></div>
+      <div class="field">
+        <label>重複アイテムの扱い</label>
+        <div class="radio-row">
+          <label class="radio-opt"><input type="radio" name="dup" value="skip" checked><span>スキップ</span></label>
+          <label class="radio-opt"><input type="radio" name="dup" value="overwrite"><span>上書き</span></label>
+          <label class="radio-opt"><input type="radio" name="dup" value="add"><span>追加</span></label>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeCsvModal()">キャンセル</button>
+        <button class="btn-add"    onclick="confirmImport()">インポート実行</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== トースト ========== -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

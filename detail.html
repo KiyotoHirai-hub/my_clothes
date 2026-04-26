@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>詳細 — MY WARDROBE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="detail-page">
+
+  <div class="detail-header">
+    <button class="back-btn" onclick="history.back()">← 一覧に戻る</button>
+    <div class="logo-sm">MY <span>Wardrobe</span></div>
+  </div>
+
+  <div class="detail-photo-wrap" id="detail-photo"></div>
+
+  <div class="detail-content">
+    <div class="detail-season-chip" id="detail-season"></div>
+    <div class="detail-brand" id="detail-brand"></div>
+    <div class="detail-name"  id="detail-name"></div>
+    <div class="chip-row"     id="detail-chips"></div>
+
+    <div class="stat-box">
+      <div class="stat-cell">
+        <div class="stat-num"   id="s-count">—</div>
+        <div class="stat-label">着用回数</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-cell">
+        <div class="stat-num"   id="s-last">—</div>
+        <div class="stat-label">最終着用</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-cell">
+        <div class="stat-num"   id="s-added">—</div>
+        <div class="stat-label">登録日</div>
+      </div>
+    </div>
+
+    <button class="detail-wear-btn" onclick="wearItem()">＋ 今日着た</button>
+
+    <div class="detail-sub-row">
+      <label class="detail-sub-btn">
+        📷 写真を変更
+        <input type="file" accept="image/*" onchange="changePhoto(event)" />
+      </label>
+      <button class="detail-sub-btn danger" onclick="deleteItem()">🗑 削除</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+  <script src="detail.js"></script>
+</body>
+</html>
