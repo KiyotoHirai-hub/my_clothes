@@ -4,12 +4,11 @@
 
 :root {
   --bg:        #f8f7f4;
-  --bg2:       #f0ede8;
+  --bg2:       #efefef;
   --surface:   #ffffff;
   --border:    #e2ddd6;
   --border2:   #ccc8c0;
   --accent:    #2c2c2c;
-  --gold:      #b89a6a;
   --text:      #1a1a18;
   --text-mid:  #555550;
   --text-muted:#9a9690;
@@ -57,7 +56,7 @@ body {
 }
 
 .w-temp {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Noto Sans JP', sans-serif;
   font-size: 15px;
   font-weight: 600;
 }
@@ -81,7 +80,7 @@ header {
   position: sticky;
   top: 33px;
   z-index: 100;
-  background: rgba(248,247,244,0.94);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
@@ -97,12 +96,12 @@ header {
 }
 
 .logo {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Noto Sans JP', sans-serif;
   font-size: 26px;
   font-weight: 300;
   letter-spacing: 0.22em;
 }
-.logo span { font-style: italic; color: var(--gold); }
+.logo span { color: var(--text); }
 
 .header-right {
   display: flex;
@@ -266,10 +265,9 @@ header {
   text-overflow: ellipsis;
 }
 .card-brand {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Noto Sans JP', sans-serif;
   font-size: 13px;
-  font-style: italic;
-  color: var(--gold);
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -301,7 +299,7 @@ header {
   border-top: 1px solid var(--border);
 }
 .wear-num {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Noto Sans JP', sans-serif;
   font-size: 24px;
   font-weight: 600;
   line-height: 1;
@@ -392,7 +390,7 @@ header {
 }
 .modal-overlay.open .modal { transform: translateY(0); }
 .modal-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Noto Sans JP', sans-serif;
   font-size: 22px;
   font-weight: 300;
   letter-spacing: 0.18em;
@@ -560,8 +558,8 @@ body.detail-page { padding-bottom: 40px; }
   letter-spacing: 0.1em; color: var(--text-muted); cursor: pointer; padding: 6px 0;
 }
 .back-btn:active { color: var(--accent); }
-.logo-sm { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 300; letter-spacing: 0.18em; }
-.logo-sm span { font-style: italic; color: var(--gold); }
+.logo-sm { font-family: 'Noto Sans JP', sans-serif; font-size: 18px; font-weight: 300; letter-spacing: 0.18em; }
+.logo-sm span { color: var(--text); }
 
 .detail-photo-wrap {
   width: 100%; max-width: 540px; margin: 0 auto;
@@ -584,8 +582,8 @@ body.detail-page { padding-bottom: 40px; }
 .detail-season-chip.fall   { background: var(--fall); }
 .detail-season-chip.winter { background: var(--winter); }
 
-.detail-brand { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-style: italic; color: var(--gold); margin-bottom: 4px; }
-.detail-name  { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; letter-spacing: 0.06em; line-height: 1.2; margin-bottom: 16px; }
+.detail-brand { font-family: 'Noto Sans JP', sans-serif; font-size: 17px; color: var(--text); margin-bottom: 4px; }
+.detail-name  { font-family: 'Noto Sans JP', sans-serif; font-size: 32px; font-weight: 300; letter-spacing: 0.06em; line-height: 1.2; margin-bottom: 16px; }
 
 .chip-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
 .info-chip {
@@ -605,7 +603,7 @@ body.detail-page { padding-bottom: 40px; }
 .stat-cell { flex: 1; text-align: center; padding: 16px 8px; }
 .stat-divider { width: 1px; background: var(--border); flex-shrink: 0; }
 .stat-num {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Noto Sans JP', sans-serif;
   font-size: 26px; font-weight: 600; line-height: 1; margin-bottom: 5px;
 }
 .stat-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0.12em; }
