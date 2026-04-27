@@ -16,9 +16,12 @@
   --danger:    #c0614f;
   --radius:    14px;
   --shadow:    0 2px 16px rgba(0,0,0,0.07);
-  --winter:    #5a9abf;
-  --spring:    #7aaa5a;
-  --summer:    #d4885a;
+
+  /* 4季カラー */
+  --spring: #e8956d;
+  --summer: #5aaa82;
+  --fall:   #b87a3a;
+  --winter: #5a8fbf;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -68,9 +71,10 @@ body {
   font-weight: 500;
   background: rgba(255,255,255,0.18);
 }
-.weather-season-badge.winter { background: var(--winter); }
 .weather-season-badge.spring { background: var(--spring); }
 .weather-season-badge.summer { background: var(--summer); }
+.weather-season-badge.fall   { background: var(--fall); }
+.weather-season-badge.winter { background: var(--winter); }
 
 /* ── ヘッダー ─────────────────────────────────────────── */
 header {
@@ -98,7 +102,6 @@ header {
   font-weight: 300;
   letter-spacing: 0.22em;
 }
-
 .logo span { font-style: italic; color: var(--gold); }
 
 .header-right {
@@ -113,7 +116,6 @@ header {
   letter-spacing: 0.12em;
 }
 
-/* CSVインポートボタン */
 .csv-import-btn {
   font-family: 'Noto Sans JP', sans-serif;
   font-size: 11px;
@@ -127,17 +129,10 @@ header {
   position: relative;
   overflow: hidden;
   white-space: nowrap;
-  transition: background 0.16s, color 0.16s;
+  transition: background 0.16s;
 }
-
 .csv-import-btn:hover { background: var(--bg2); }
-
-.csv-import-btn input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
+.csv-import-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
 /* ── ツールバー ───────────────────────────────────────── */
 .toolbar {
@@ -173,9 +168,10 @@ header {
 }
 
 .chip.active                          { background: var(--accent); border-color: var(--accent); color: #fff; }
-.chip.season.active[data-s="winter"] { background: var(--winter); border-color: var(--winter); color: #fff; }
 .chip.season.active[data-s="spring"] { background: var(--spring); border-color: var(--spring); color: #fff; }
 .chip.season.active[data-s="summer"] { background: var(--summer); border-color: var(--summer); color: #fff; }
+.chip.season.active[data-s="fall"]   { background: var(--fall);   border-color: var(--fall);   color: #fff; }
+.chip.season.active[data-s="winter"] { background: var(--winter); border-color: var(--winter); color: #fff; }
 
 /* ── グリッド ─────────────────────────────────────────── */
 .grid {
@@ -193,7 +189,6 @@ header {
   padding: 64px 20px;
   color: var(--text-muted);
 }
-
 .empty-icon { font-size: 44px; margin-bottom: 14px; }
 .empty-text { font-size: 13px; line-height: 2; }
 
@@ -212,7 +207,6 @@ header {
   color: inherit;
   -webkit-tap-highlight-color: transparent;
 }
-
 .card:active { opacity: 0.85; }
 
 .card-photo {
@@ -222,14 +216,12 @@ header {
   position: relative;
   overflow: hidden;
 }
-
 .card-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-
 .card-photo-emoji {
   width: 100%;
   height: 100%;
@@ -239,22 +231,24 @@ header {
   font-size: 52px;
 }
 
-.card-season {
+/* 季節ドット（カード右上） */
+.card-seasons {
   position: absolute;
   top: 8px;
   right: 8px;
-  font-size: 9px;
-  padding: 2px 8px;
-  border-radius: 8px;
-  color: #fff;
-  font-weight: 500;
-  letter-spacing: 0.05em;
+  display: flex;
+  gap: 3px;
 }
-
-.card-season.winter { background: rgba(90,154,191,0.88); }
-.card-season.spring { background: rgba(122,170,90,0.88); }
-.card-season.summer { background: rgba(212,136,90,0.88); }
-.card-season.all    { background: rgba(0,0,0,0.3); }
+.season-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.7);
+}
+.season-dot.spring { background: var(--spring); }
+.season-dot.summer { background: var(--summer); }
+.season-dot.fall   { background: var(--fall); }
+.season-dot.winter { background: var(--winter); }
 
 .card-body {
   padding: 10px 10px 6px;
@@ -264,7 +258,6 @@ header {
   gap: 3px;
   overflow: hidden;
 }
-
 .card-name {
   font-size: 12px;
   font-weight: 500;
@@ -272,7 +265,6 @@ header {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .card-brand {
   font-family: 'Cormorant Garamond', serif;
   font-size: 13px;
@@ -282,12 +274,10 @@ header {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .card-meta {
   font-size: 10px;
   color: var(--text-muted);
 }
-
 .card-badge {
   display: inline-block;
   font-size: 9px;
@@ -300,7 +290,6 @@ header {
   margin-top: 4px;
   width: fit-content;
 }
-
 .card-badge.mid  { background: #eef3f8; border-color: #a8c0d8; color: #4878a0; }
 .card-badge.high { background: #fdf8ee; border-color: #ddc98a; color: #9a7830; }
 
@@ -311,21 +300,18 @@ header {
   padding: 6px 10px 10px;
   border-top: 1px solid var(--border);
 }
-
 .wear-num {
   font-family: 'Cormorant Garamond', serif;
   font-size: 24px;
   font-weight: 600;
   line-height: 1;
 }
-
 .wear-label {
   font-size: 9px;
   color: var(--text-muted);
   letter-spacing: 0.12em;
   margin-top: 1px;
 }
-
 .wear-btn {
   width: 38px;
   height: 38px;
@@ -341,9 +327,7 @@ header {
   transition: background 0.14s, color 0.14s, transform 0.1s;
   -webkit-tap-highlight-color: transparent;
 }
-
 .wear-btn:active { background: var(--accent); color: #fff; transform: scale(0.88); }
-
 .del-btn {
   background: none;
   border: none;
@@ -354,7 +338,6 @@ header {
   padding: 3px 5px;
   transition: opacity 0.2s, color 0.2s;
 }
-
 .del-btn:active { opacity: 1; color: var(--danger); }
 
 /* ── FAB ─────────────────────────────────────────────── */
@@ -377,7 +360,6 @@ header {
   white-space: nowrap;
   z-index: 50;
 }
-
 .fab:active { transform: translateX(-50%) scale(0.95); }
 
 /* ── モーダル共通 ─────────────────────────────────────── */
@@ -395,9 +377,7 @@ header {
   pointer-events: none;
   transition: opacity 0.22s;
 }
-
 .modal-overlay.open { opacity: 1; pointer-events: all; }
-
 .modal {
   width: 100%;
   max-width: 540px;
@@ -410,9 +390,7 @@ header {
   max-height: 92vh;
   overflow-y: auto;
 }
-
 .modal-overlay.open .modal { transform: translateY(0); }
-
 .modal-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 22px;
@@ -420,9 +398,7 @@ header {
   letter-spacing: 0.18em;
   margin-bottom: 18px;
 }
-
 .field { margin-bottom: 13px; }
-
 .field label {
   display: block;
   font-size: 10px;
@@ -431,9 +407,7 @@ header {
   text-transform: uppercase;
   margin-bottom: 5px;
 }
-
 .req { color: var(--danger); }
-
 .field input,
 .field select {
   width: 100%;
@@ -450,10 +424,10 @@ header {
   -webkit-appearance: none;
   transition: border-color 0.18s;
 }
-
 .field input:focus, .field select:focus { border-color: var(--accent); }
 .field input::placeholder { color: var(--text-muted); }
 
+/* 写真アップロード */
 .photo-drop {
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -471,31 +445,34 @@ header {
   overflow: hidden;
   transition: border-color 0.18s;
 }
-
 .photo-drop:hover { border-color: var(--accent); }
-
-.photo-drop img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.photo-drop input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
+.photo-drop img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.photo-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .upload-text { font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em; }
 
-.radio-row { display: flex; gap: 8px; flex-wrap: wrap; }
+/* 季節チェックボックス（複数選択） */
+.season-check-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.season-check-opt { cursor: pointer; }
+.season-check-opt input { display: none; }
+.season-check-opt span {
+  display: block;
+  font-size: 11px;
+  padding: 6px 13px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text-mid);
+  transition: all 0.14s;
+}
+.season-check-opt input[value="spring"]:checked + span { background: var(--spring); border-color: var(--spring); color: #fff; }
+.season-check-opt input[value="summer"]:checked + span { background: var(--summer); border-color: var(--summer); color: #fff; }
+.season-check-opt input[value="fall"]:checked   + span { background: var(--fall);   border-color: var(--fall);   color: #fff; }
+.season-check-opt input[value="winter"]:checked + span { background: var(--winter); border-color: var(--winter); color: #fff; }
 
+/* ラジオ行 */
+.radio-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .radio-opt { cursor: pointer; }
 .radio-opt input { display: none; }
-
 .radio-opt span {
   display: block;
   font-size: 11px;
@@ -506,20 +483,10 @@ header {
   color: var(--text-mid);
   transition: all 0.14s;
 }
+.radio-opt input:checked + span { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-.radio-opt input:checked + span {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
-.emoji-grid {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 5px;
-  margin-top: 4px;
-}
-
+/* 絵文字グリッド */
+.emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin-top: 4px; }
 .emoji-opt {
   background: var(--bg2);
   border: 1.5px solid transparent;
@@ -530,42 +497,23 @@ header {
   cursor: pointer;
   transition: border-color 0.14s, transform 0.1s;
 }
-
 .emoji-opt.sel { border-color: var(--accent); background: var(--bg); }
 .emoji-opt:active { transform: scale(0.8); }
 
-.modal-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 18px;
-}
-
+/* モーダルボタン */
+.modal-actions { display: flex; gap: 10px; margin-top: 18px; }
 .btn-cancel {
-  flex: 1;
-  padding: 13px;
-  border-radius: 11px;
-  border: 1px solid var(--border2);
-  background: transparent;
-  color: var(--text-muted);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
-  cursor: pointer;
+  flex: 1; padding: 13px; border-radius: 11px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text-muted); font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px; cursor: pointer;
 }
-
 .btn-add {
-  flex: 2;
-  padding: 13px;
-  border-radius: 11px;
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  transition: opacity 0.18s;
+  flex: 2; padding: 13px; border-radius: 11px;
+  border: none; background: var(--accent); color: #fff;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 13px;
+  letter-spacing: 0.08em; cursor: pointer; transition: opacity 0.18s;
 }
-
 .btn-add:active { opacity: 0.78; }
 
 /* ── トースト ─────────────────────────────────────────── */
@@ -586,7 +534,6 @@ header {
   z-index: 500;
   pointer-events: none;
 }
-
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ============================================================
@@ -607,110 +554,47 @@ body.detail-page { padding-bottom: 40px; }
   justify-content: space-between;
   padding: 12px 20px;
 }
-
 .back-btn {
-  background: none;
-  border: none;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 6px 0;
+  background: none; border: none;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 12px;
+  letter-spacing: 0.1em; color: var(--text-muted); cursor: pointer; padding: 6px 0;
 }
-
 .back-btn:active { color: var(--accent); }
-
-.logo-sm {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
-  font-weight: 300;
-  letter-spacing: 0.18em;
-}
-
+.logo-sm { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 300; letter-spacing: 0.18em; }
 .logo-sm span { font-style: italic; color: var(--gold); }
 
 .detail-photo-wrap {
-  width: 100%;
-  max-width: 540px;
-  margin: 0 auto;
-  aspect-ratio: 4 / 5;
-  background: var(--bg2);
-  overflow: hidden;
+  width: 100%; max-width: 540px; margin: 0 auto;
+  aspect-ratio: 4 / 5; background: var(--bg2); overflow: hidden;
 }
+.detail-photo-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.detail-photo-emoji { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 90px; }
 
-.detail-photo-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+.detail-content { max-width: 540px; margin: 0 auto; padding: 24px 24px 0; }
 
-.detail-photo-emoji {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 90px;
-}
-
-.detail-content {
-  max-width: 540px;
-  margin: 0 auto;
-  padding: 24px 24px 0;
-}
-
+/* 季節チップ群（詳細） */
+.detail-season-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 .detail-season-chip {
-  display: inline-block;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  padding: 4px 14px;
-  border-radius: 12px;
-  color: #fff;
-  font-weight: 500;
-  margin-bottom: 10px;
+  font-size: 11px; letter-spacing: 0.1em;
+  padding: 4px 12px; border-radius: 12px;
+  color: #fff; font-weight: 500;
 }
-
-.detail-season-chip.winter { background: var(--winter); }
 .detail-season-chip.spring { background: var(--spring); }
 .detail-season-chip.summer { background: var(--summer); }
-.detail-season-chip.all    { background: var(--text-muted); }
+.detail-season-chip.fall   { background: var(--fall); }
+.detail-season-chip.winter { background: var(--winter); }
 
-.detail-brand {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 17px;
-  font-style: italic;
-  color: var(--gold);
-  margin-bottom: 4px;
-}
+.detail-brand { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-style: italic; color: var(--gold); margin-bottom: 4px; }
+.detail-name  { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; letter-spacing: 0.06em; line-height: 1.2; margin-bottom: 16px; }
 
-.detail-name {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 32px;
-  font-weight: 300;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-  margin-bottom: 16px;
-}
-
-.chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-bottom: 24px;
-}
-
+.chip-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
 .info-chip {
-  font-size: 11px;
-  letter-spacing: 0.07em;
-  padding: 4px 13px;
-  border-radius: 12px;
-  border: 1px solid var(--border2);
-  background: var(--bg2);
-  color: var(--text-mid);
+  font-size: 11px; letter-spacing: 0.07em;
+  padding: 4px 13px; border-radius: 12px;
+  border: 1px solid var(--border2); background: var(--bg2); color: var(--text-mid);
 }
 
+/* 統計ボックス */
 .stat-box {
   display: flex;
   border: 1px solid var(--border);
@@ -718,74 +602,34 @@ body.detail-page { padding-bottom: 40px; }
   overflow: hidden;
   margin-bottom: 28px;
 }
-
-.stat-cell {
-  flex: 1;
-  text-align: center;
-  padding: 16px 8px;
-}
-
+.stat-cell { flex: 1; text-align: center; padding: 16px 8px; }
 .stat-divider { width: 1px; background: var(--border); flex-shrink: 0; }
-
 .stat-num {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 26px;
-  font-weight: 600;
-  line-height: 1;
-  margin-bottom: 5px;
+  font-size: 26px; font-weight: 600; line-height: 1; margin-bottom: 5px;
 }
+.stat-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0.12em; }
 
-.stat-label {
-  font-size: 9px;
-  color: var(--text-muted);
-  letter-spacing: 0.12em;
-}
-
+/* 詳細アクション */
 .detail-wear-btn {
-  width: 100%;
-  padding: 17px;
-  border-radius: 14px;
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 15px;
-  letter-spacing: 0.14em;
-  cursor: pointer;
-  margin-bottom: 12px;
+  width: 100%; padding: 17px; border-radius: 14px; border: none;
+  background: var(--accent); color: #fff;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 15px;
+  letter-spacing: 0.14em; cursor: pointer; margin-bottom: 12px;
   transition: opacity 0.18s;
 }
-
 .detail-wear-btn:active { opacity: 0.78; }
-
 .detail-sub-row { display: flex; gap: 10px; }
-
 .detail-sub-btn {
-  flex: 1;
-  padding: 13px;
-  border-radius: 11px;
-  border: 1px solid var(--border2);
-  background: var(--bg);
-  color: var(--text-mid);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  display: block;
+  flex: 1; padding: 13px; border-radius: 11px;
+  border: 1px solid var(--border2); background: var(--bg);
+  color: var(--text-mid); font-family: 'Noto Sans JP', sans-serif;
+  font-size: 12px; letter-spacing: 0.06em; cursor: pointer;
+  text-align: center; position: relative; overflow: hidden; display: block;
   transition: background 0.16s;
 }
-
 .detail-sub-btn.danger { border-color: #f0ccc8; background: #fdf5f4; color: var(--danger); }
-
-.detail-sub-btn input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
+.detail-sub-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(12px); }

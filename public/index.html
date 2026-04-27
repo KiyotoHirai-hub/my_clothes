@@ -10,7 +10,7 @@
 </head>
 <body>
 
-  <!-- ========== 天気バー ========== -->
+  <!-- 天気バー -->
   <div class="weather-bar">
     <div class="weather-bar-inner">
       <span id="w-date">—</span>
@@ -21,13 +21,12 @@
     </div>
   </div>
 
-  <!-- ========== HEADER ========== -->
+  <!-- ヘッダー -->
   <header>
     <div class="header-inner">
       <div class="logo">MY <span>Wardrobe</span></div>
       <div class="header-right">
         <div class="header-count" id="header-count">— アイテム</div>
-        <!-- CSVインポートボタン -->
         <label class="csv-import-btn" title="CSVから一括インポート">
           📥 CSV
           <input type="file" accept=".csv" id="csv-input" onchange="importCSV(event)" />
@@ -36,7 +35,7 @@
     </div>
   </header>
 
-  <!-- ========== ツールバー ========== -->
+  <!-- ソートバー -->
   <div class="toolbar">
     <span class="toolbar-label">Sort</span>
     <button class="chip active" onclick="setSort('count-desc',this)">着用↓</button>
@@ -44,21 +43,24 @@
     <button class="chip"        onclick="setSort('name',      this)">名前順</button>
     <button class="chip"        onclick="setSort('added',     this)">追加順</button>
   </div>
+
+  <!-- 季節フィルター（4季） -->
   <div class="toolbar" style="padding-top:6px; padding-bottom:12px">
     <span class="toolbar-label">季節</span>
     <button class="chip season active" data-s="all"    onclick="setSeason('all',   this)">すべて</button>
-    <button class="chip season"        data-s="winter" onclick="setSeason('winter',this)">❄ Winter</button>
-    <button class="chip season"        data-s="spring" onclick="setSeason('spring',this)">🌸 Spring/Fall</button>
-    <button class="chip season"        data-s="summer" onclick="setSeason('summer',this)">☀ Summer</button>
+    <button class="chip season"        data-s="spring" onclick="setSeason('spring',this)">🌸 春</button>
+    <button class="chip season"        data-s="summer" onclick="setSeason('summer',this)">☀ 夏</button>
+    <button class="chip season"        data-s="fall"   onclick="setSeason('fall',  this)">🍂 秋</button>
+    <button class="chip season"        data-s="winter" onclick="setSeason('winter',this)">❄ 冬</button>
   </div>
 
-  <!-- ========== アイテム一覧 ========== -->
+  <!-- アイテム一覧 -->
   <div class="grid" id="list"></div>
 
-  <!-- ========== FAB ========== -->
+  <!-- FAB -->
   <button class="fab" onclick="openModal()">＋ アイテムを追加</button>
 
-  <!-- ========== 追加モーダル ========== -->
+  <!-- 追加モーダル -->
   <div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
     <div class="modal">
       <div class="modal-title">New Item</div>
@@ -78,7 +80,7 @@
       </div>
       <div class="field">
         <label>ブランド</label>
-        <input type="text" id="inp-brand" placeholder="例: Levi's" maxlength="30" />
+        <input type="text" id="inp-brand" placeholder="例: Levi's" maxlength="40" />
       </div>
       <div class="field">
         <label>カテゴリ</label>
@@ -91,17 +93,32 @@
       </div>
       <div class="field">
         <label>カラー</label>
-        <input type="text" id="inp-color" placeholder="例: navy" maxlength="20" />
+        <input type="text" id="inp-color" placeholder="例: navy" maxlength="30" />
       </div>
+
+      <!-- 季節タグ（複数選択） -->
       <div class="field">
-        <label>季節タグ</label>
-        <div class="radio-row">
-          <label class="radio-opt"><input type="radio" name="inp-s" value="winter"><span>❄ Winter</span></label>
-          <label class="radio-opt"><input type="radio" name="inp-s" value="spring" checked><span>🌸 Spring/Fall</span></label>
-          <label class="radio-opt"><input type="radio" name="inp-s" value="summer"><span>☀ Summer</span></label>
-          <label class="radio-opt"><input type="radio" name="inp-s" value="all"><span>🔄 通年</span></label>
+        <label>季節タグ（複数選択可）</label>
+        <div class="season-check-row">
+          <label class="season-check-opt">
+            <input type="checkbox" name="inp-seasons" value="spring" />
+            <span>🌸 春</span>
+          </label>
+          <label class="season-check-opt">
+            <input type="checkbox" name="inp-seasons" value="summer" />
+            <span>☀ 夏</span>
+          </label>
+          <label class="season-check-opt">
+            <input type="checkbox" name="inp-seasons" value="fall" />
+            <span>🍂 秋</span>
+          </label>
+          <label class="season-check-opt">
+            <input type="checkbox" name="inp-seasons" value="winter" />
+            <span>❄ 冬</span>
+          </label>
         </div>
       </div>
+
       <div class="field">
         <label>写真なしの場合のアイコン</label>
         <div class="emoji-grid" id="emoji-grid"></div>
@@ -113,7 +130,7 @@
     </div>
   </div>
 
-  <!-- ========== CSVインポート確認モーダル ========== -->
+  <!-- CSVインポート確認モーダル -->
   <div class="modal-overlay" id="csv-modal" onclick="handleCsvOverlayClick(event)">
     <div class="modal">
       <div class="modal-title">CSV インポート</div>
@@ -133,9 +150,7 @@
     </div>
   </div>
 
-  <!-- ========== トースト ========== -->
   <div class="toast" id="toast"></div>
-
   <script src="app.js"></script>
 </body>
 </html>

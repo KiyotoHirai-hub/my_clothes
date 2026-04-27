@@ -1,10 +1,3 @@
 {
-  "routes": [
-    { "src": "/api/weather", "dest": "/api/weather.js" },
-    { "src": "/detail.html", "dest": "/detail.html" },
-    { "src": "/style.css",   "dest": "/style.css" },
-    { "src": "/app.js",      "dest": "/app.js" },
-    { "src": "/detail.js",   "dest": "/detail.js" },
-    { "src": "/(.*)",        "dest": "/index.html" }
-  ]
+  "outputDirectory": "public"
 }

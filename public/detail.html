@@ -15,14 +15,22 @@
     <div class="logo-sm">MY <span>Wardrobe</span></div>
   </div>
 
+  <!-- 写真 -->
   <div class="detail-photo-wrap" id="detail-photo"></div>
 
   <div class="detail-content">
-    <div class="detail-season-chip" id="detail-season"></div>
+
+    <!-- 季節チップ群 -->
+    <div class="detail-season-chips" id="detail-seasons"></div>
+
+    <!-- 名前・ブランド -->
     <div class="detail-brand" id="detail-brand"></div>
     <div class="detail-name"  id="detail-name"></div>
-    <div class="chip-row"     id="detail-chips"></div>
 
+    <!-- 情報チップ -->
+    <div class="chip-row" id="detail-chips"></div>
+
+    <!-- 統計 -->
     <div class="stat-box">
       <div class="stat-cell">
         <div class="stat-num"   id="s-count">—</div>
@@ -40,6 +48,7 @@
       </div>
     </div>
 
+    <!-- アクション -->
     <button class="detail-wear-btn" onclick="wearItem()">＋ 今日着た</button>
 
     <div class="detail-sub-row">
@@ -49,10 +58,10 @@
       </label>
       <button class="detail-sub-btn danger" onclick="deleteItem()">🗑 削除</button>
     </div>
+
   </div>
 
   <div class="toast" id="toast"></div>
-
   <script src="app.js"></script>
   <script src="detail.js"></script>
 </body>
