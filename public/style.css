@@ -3,7 +3,7 @@
    ============================================================ */
 
 :root {
-  --bg:        #efefef;
+  --bg:        #ffffff;
   --bg2:       #efefef;
   --surface:   #ffffff;
   --border:    #e2ddd6;
@@ -543,7 +543,7 @@ body.detail-page { padding-bottom: 40px; }
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(248,247,244,0.94);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
