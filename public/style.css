@@ -3,24 +3,23 @@
    ============================================================ */
 
 :root {
-  --bg:        #ffffff;
-  --bg2:       #efefef;
+  --bg:        #f8f7f4;
+  --bg2:       #f0ede8;
   --surface:   #ffffff;
   --border:    #e2ddd6;
   --border2:   #ccc8c0;
   --accent:    #2c2c2c;
+  --gold:      #b89a6a;
   --text:      #1a1a18;
   --text-mid:  #555550;
   --text-muted:#9a9690;
   --danger:    #c0614f;
   --radius:    14px;
   --shadow:    0 2px 16px rgba(0,0,0,0.07);
-
-  /* 4季カラー */
-  --spring: #e8956d;
-  --summer: #5aaa82;
-  --fall:   #b87a3a;
-  --winter: #5a8fbf;
+  --spring:    #e8956d;
+  --summer:    #5aaa82;
+  --fall:      #c4874a;
+  --winter:    #5a8fbf;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,40 +34,15 @@ body {
 }
 
 /* ── 天気バー ─────────────────────────────────────────── */
-.weather-bar {
-  background: var(--accent);
-  color: #fff;
-  position: sticky;
-  top: 0;
-  z-index: 110;
-}
-
+.weather-bar { background: var(--accent); color: #fff; position: sticky; top: 0; z-index: 110; }
 .weather-bar-inner {
-  max-width: 540px;
-  margin: 0 auto;
-  padding: 7px 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  flex-wrap: wrap;
+  max-width: 540px; margin: 0 auto; padding: 7px 20px;
+  display: flex; align-items: center; gap: 10px; font-size: 12px; flex-wrap: wrap;
 }
-
-.w-temp {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-}
-
+.w-temp { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 600; }
 .weather-season-badge {
-  margin-left: auto;
-  padding: 2px 10px;
-  border-radius: 10px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  font-weight: 500;
-  background: rgba(255,255,255,0.18);
+  margin-left: auto; padding: 2px 10px; border-radius: 10px;
+  font-size: 10px; font-weight: 500; background: rgba(255,255,255,0.18);
 }
 .weather-season-badge.spring { background: var(--spring); }
 .weather-season-badge.summer { background: var(--summer); }
@@ -77,461 +51,180 @@ body {
 
 /* ── ヘッダー ─────────────────────────────────────────── */
 header {
-  position: sticky;
-  top: 33px;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  position: sticky; top: 33px; z-index: 100;
+  background: rgba(248,247,244,0.94);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
 }
-
 .header-inner {
-  max-width: 540px;
-  margin: 0 auto;
-  padding: 12px 20px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  max-width: 540px; margin: 0 auto; padding: 12px 20px 10px;
+  display: flex; align-items: center; justify-content: space-between;
 }
-
-.logo {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 26px;
-  font-weight: 300;
-  letter-spacing: 0.22em;
-}
-.logo span { color: var(--text); }
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-count {
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 0.12em;
-}
-
+.logo { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 300; letter-spacing: 0.22em; }
+.logo span { font-style: italic; color: var(--gold); }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.header-count { font-size: 11px; color: var(--text-muted); letter-spacing: 0.12em; }
 .csv-import-btn {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  padding: 5px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  color: var(--text-mid);
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  white-space: nowrap;
-  transition: background 0.16s;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 11px; letter-spacing: 0.06em;
+  padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border2);
+  background: var(--surface); color: var(--text-mid); cursor: pointer;
+  position: relative; overflow: hidden; white-space: nowrap;
 }
-.csv-import-btn:hover { background: var(--bg2); }
 .csv-import-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* ── 検索バー ─────────────────────────────────────────── */
+.search-bar {
+  max-width: 540px; margin: 10px auto 0; padding: 0 16px;
+}
+.search-inner {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 24px; padding: 10px 16px;
+  transition: border-color 0.18s;
+}
+.search-inner:focus-within { border-color: var(--accent); }
+.search-icon { font-size: 14px; flex-shrink: 0; color: var(--text-muted); }
+.search-input {
+  flex: 1; border: none; background: transparent; outline: none;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 300;
+  color: var(--text);
+}
+.search-input::placeholder { color: var(--text-muted); }
+.search-clear {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 14px; cursor: pointer; flex-shrink: 0; padding: 0;
+}
 
 /* ── ツールバー ───────────────────────────────────────── */
 .toolbar {
-  max-width: 540px;
-  margin: 0 auto;
-  padding: 10px 20px 0;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
+  max-width: 540px; margin: 0 auto; padding: 10px 20px 0;
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
 }
-
-.toolbar-label {
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
-
+.toolbar-label { font-size: 10px; letter-spacing: 0.15em; color: var(--text-muted); text-transform: uppercase; flex-shrink: 0; }
 .chip {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  padding: 5px 13px;
-  border-radius: 20px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  color: var(--text-mid);
-  cursor: pointer;
-  transition: all 0.16s;
-  white-space: nowrap;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 11px; letter-spacing: 0.05em;
+  padding: 5px 13px; border-radius: 20px; border: 1px solid var(--border2);
+  background: var(--surface); color: var(--text-mid); cursor: pointer;
+  transition: all 0.16s; white-space: nowrap;
 }
-
 .chip.active                          { background: var(--accent); border-color: var(--accent); color: #fff; }
 .chip.season.active[data-s="spring"] { background: var(--spring); border-color: var(--spring); color: #fff; }
 .chip.season.active[data-s="summer"] { background: var(--summer); border-color: var(--summer); color: #fff; }
 .chip.season.active[data-s="fall"]   { background: var(--fall);   border-color: var(--fall);   color: #fff; }
 .chip.season.active[data-s="winter"] { background: var(--winter); border-color: var(--winter); color: #fff; }
 
-/* ── グリッド ─────────────────────────────────────────── */
-.grid {
-  max-width: 540px;
-  margin: 16px auto 0;
-  padding: 0 16px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+/* ── ローディング ─────────────────────────────────────── */
+.loading {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 60px 20px; gap: 14px;
 }
+.loading-spinner {
+  width: 32px; height: 32px; border: 2px solid var(--border2);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.loading-text { font-size: 12px; color: var(--text-muted); letter-spacing: 0.1em; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.empty {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 64px 20px;
-  color: var(--text-muted);
+/* ── グリッド・カード ─────────────────────────────────── */
+.grid {
+  max-width: 540px; margin: 16px auto 0; padding: 0 16px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
 }
+.empty { grid-column: 1 / -1; text-align: center; padding: 64px 20px; color: var(--text-muted); }
 .empty-icon { font-size: 44px; margin-bottom: 14px; }
 .empty-text { font-size: 13px; line-height: 2; }
 
-/* ── カード ───────────────────────────────────────────── */
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  animation: fadeUp 0.3s ease both;
-  cursor: pointer;
-  text-decoration: none;
-  color: inherit;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; animation: fadeUp 0.3s ease both;
+  cursor: pointer; text-decoration: none; color: inherit;
   -webkit-tap-highlight-color: transparent;
 }
 .card:active { opacity: 0.85; }
 
-.card-photo {
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  background: var(--bg2);
-  position: relative;
-  overflow: hidden;
-}
-.card-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.card-photo-emoji {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 52px;
-}
+.card-photo { width: 100%; aspect-ratio: 3/4; background: var(--bg2); position: relative; overflow: hidden; }
+.card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card-photo-emoji { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 52px; }
 
-/* 季節ドット（カード右上） */
-.card-seasons {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  gap: 3px;
-}
-.season-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.7);
-}
+.card-seasons { position: absolute; top: 8px; right: 8px; display: flex; gap: 3px; }
+.season-dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.7); }
 .season-dot.spring { background: var(--spring); }
 .season-dot.summer { background: var(--summer); }
 .season-dot.fall   { background: var(--fall); }
 .season-dot.winter { background: var(--winter); }
 
-.card-body {
-  padding: 10px 10px 6px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  overflow: hidden;
-}
-.card-name {
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.card-brand {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.card-meta {
-  font-size: 10px;
-  color: var(--text-muted);
-}
-.card-badge {
-  display: inline-block;
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  padding: 2px 7px;
-  border-radius: 8px;
-  border: 1px solid var(--border2);
-  color: var(--text-muted);
-  background: var(--bg2);
-  margin-top: 4px;
-  width: fit-content;
-}
+.card-body { padding: 10px 10px 6px; flex: 1; display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+.card-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-brand { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-style: italic; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-meta { font-size: 10px; color: var(--text-muted); }
+.card-stars { font-size: 10px; color: var(--gold); letter-spacing: 1px; }
+.card-badge { display: inline-block; font-size: 9px; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 8px; border: 1px solid var(--border2); color: var(--text-muted); background: var(--bg2); margin-top: 4px; width: fit-content; }
 .card-badge.mid  { background: #eef3f8; border-color: #a8c0d8; color: #4878a0; }
 .card-badge.high { background: #fdf8ee; border-color: #ddc98a; color: #9a7830; }
 
-.card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px 10px;
-  border-top: 1px solid var(--border);
-}
-.wear-num {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1;
-}
-.wear-label {
-  font-size: 9px;
-  color: var(--text-muted);
-  letter-spacing: 0.12em;
-  margin-top: 1px;
-}
-.wear-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 1.5px solid var(--accent);
-  background: transparent;
-  color: var(--accent);
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.14s, color 0.14s, transform 0.1s;
-  -webkit-tap-highlight-color: transparent;
-}
+.card-footer { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px 10px; border-top: 1px solid var(--border); }
+.wear-num { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; line-height: 1; }
+.wear-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0.12em; margin-top: 1px; }
+.wear-btn { width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--accent); background: transparent; color: var(--accent); font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.14s, color 0.14s, transform 0.1s; -webkit-tap-highlight-color: transparent; }
 .wear-btn:active { background: var(--accent); color: #fff; transform: scale(0.88); }
-.del-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 12px;
-  cursor: pointer;
-  opacity: 0.4;
-  padding: 3px 5px;
-  transition: opacity 0.2s, color 0.2s;
-}
+.del-btn { background: none; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; opacity: 0.4; padding: 3px 5px; }
 .del-btn:active { opacity: 1; color: var(--danger); }
 
 /* ── FAB ─────────────────────────────────────────────── */
-.fab {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 30px;
-  padding: 15px 36px;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.14em;
-  cursor: pointer;
-  box-shadow: 0 6px 28px rgba(44,44,44,0.28);
-  transition: transform 0.15s, box-shadow 0.15s;
-  white-space: nowrap;
-  z-index: 50;
-}
+.fab { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; border: none; border-radius: 30px; padding: 15px 36px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; letter-spacing: 0.14em; cursor: pointer; box-shadow: 0 6px 28px rgba(44,44,44,0.28); white-space: nowrap; z-index: 50; }
 .fab:active { transform: translateX(-50%) scale(0.95); }
 
-/* ── モーダル共通 ─────────────────────────────────────── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(30,28,24,0.5);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 200;
-  display: flex;
-  align-items: flex-end;
-  padding: 16px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.22s;
-}
+/* ── モーダル ─────────────────────────────────────────── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(30,28,24,0.5); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: flex-end; padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.22s; }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal {
-  width: 100%;
-  max-width: 540px;
-  margin: 0 auto;
-  background: var(--surface);
-  border-radius: 22px 22px 16px 16px;
-  padding: 22px 20px 32px;
-  transform: translateY(50px);
-  transition: transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
-  max-height: 92vh;
-  overflow-y: auto;
-}
+.modal { width: 100%; max-width: 540px; margin: 0 auto; background: var(--surface); border-radius: 22px 22px 16px 16px; padding: 22px 20px 32px; transform: translateY(50px); transition: transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1); max-height: 92vh; overflow-y: auto; }
 .modal-overlay.open .modal { transform: translateY(0); }
-.modal-title {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 22px;
-  font-weight: 300;
-  letter-spacing: 0.18em;
-  margin-bottom: 18px;
-}
-.field { margin-bottom: 13px; }
-.field label {
-  display: block;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
+.modal-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; letter-spacing: 0.18em; margin-bottom: 18px; }
+
+/* フィールド */
+.field { margin-bottom: 12px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0; }
+.field-row .field { margin-bottom: 12px; }
+.field label { display: block; font-size: 10px; letter-spacing: 0.14em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
 .req { color: var(--danger); }
-.field input,
-.field select {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  padding: 11px 14px;
-  color: var(--text);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 14px;
-  font-weight: 300;
-  outline: none;
-  appearance: none;
-  -webkit-appearance: none;
-  transition: border-color 0.18s;
-}
+.field input, .field select { width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: 10px; padding: 10px 12px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 13px; font-weight: 300; outline: none; appearance: none; -webkit-appearance: none; transition: border-color 0.18s; }
 .field input:focus, .field select:focus { border-color: var(--accent); }
 .field input::placeholder { color: var(--text-muted); }
 
-/* 写真アップロード */
-.photo-drop {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  border: 1.5px dashed var(--border2);
-  border-radius: 12px;
-  background: var(--bg2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 28px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.18s;
-}
+.photo-drop { width: 100%; aspect-ratio: 4/3; border: 1.5px dashed var(--border2); border-radius: 12px; background: var(--bg2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-size: 28px; cursor: pointer; position: relative; overflow: hidden; transition: border-color 0.18s; margin-bottom: 12px; }
 .photo-drop:hover { border-color: var(--accent); }
 .photo-drop img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .photo-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .upload-text { font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em; }
 
-/* 季節チェックボックス（複数選択） */
 .season-check-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .season-check-opt { cursor: pointer; }
 .season-check-opt input { display: none; }
-.season-check-opt span {
-  display: block;
-  font-size: 11px;
-  padding: 6px 13px;
-  border-radius: 20px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  color: var(--text-mid);
-  transition: all 0.14s;
-}
+.season-check-opt span { display: block; font-size: 11px; padding: 6px 13px; border-radius: 20px; border: 1px solid var(--border2); background: var(--surface); color: var(--text-mid); transition: all 0.14s; }
 .season-check-opt input[value="spring"]:checked + span { background: var(--spring); border-color: var(--spring); color: #fff; }
 .season-check-opt input[value="summer"]:checked + span { background: var(--summer); border-color: var(--summer); color: #fff; }
 .season-check-opt input[value="fall"]:checked   + span { background: var(--fall);   border-color: var(--fall);   color: #fff; }
 .season-check-opt input[value="winter"]:checked + span { background: var(--winter); border-color: var(--winter); color: #fff; }
 
-/* ラジオ行 */
 .radio-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .radio-opt { cursor: pointer; }
 .radio-opt input { display: none; }
-.radio-opt span {
-  display: block;
-  font-size: 11px;
-  padding: 6px 13px;
-  border-radius: 20px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  color: var(--text-mid);
-  transition: all 0.14s;
-}
+.radio-opt span { display: block; font-size: 11px; padding: 6px 13px; border-radius: 20px; border: 1px solid var(--border2); background: var(--surface); color: var(--text-mid); transition: all 0.14s; }
 .radio-opt input:checked + span { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-/* 絵文字グリッド */
 .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin-top: 4px; }
-.emoji-opt {
-  background: var(--bg2);
-  border: 1.5px solid transparent;
-  border-radius: 9px;
-  padding: 5px;
-  font-size: 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.14s, transform 0.1s;
-}
+.emoji-opt { background: var(--bg2); border: 1.5px solid transparent; border-radius: 9px; padding: 5px; font-size: 20px; text-align: center; cursor: pointer; transition: border-color 0.14s; }
 .emoji-opt.sel { border-color: var(--accent); background: var(--bg); }
-.emoji-opt:active { transform: scale(0.8); }
 
-/* モーダルボタン */
 .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
-.btn-cancel {
-  flex: 1; padding: 13px; border-radius: 11px;
-  border: 1px solid var(--border2); background: transparent;
-  color: var(--text-muted); font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px; cursor: pointer;
-}
-.btn-add {
-  flex: 2; padding: 13px; border-radius: 11px;
-  border: none; background: var(--accent); color: #fff;
-  font-family: 'Noto Sans JP', sans-serif; font-size: 13px;
-  letter-spacing: 0.08em; cursor: pointer; transition: opacity 0.18s;
-}
-.btn-add:active { opacity: 0.78; }
+.btn-cancel { flex: 1; padding: 13px; border-radius: 11px; border: 1px solid var(--border2); background: transparent; color: var(--text-muted); font-family: 'Noto Sans JP', sans-serif; font-size: 13px; cursor: pointer; }
+.btn-add { flex: 2; padding: 13px; border-radius: 11px; border: none; background: var(--accent); color: #fff; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; letter-spacing: 0.08em; cursor: pointer; }
+.btn-add:disabled { opacity: 0.6; }
 
 /* ── トースト ─────────────────────────────────────────── */
-.toast {
-  position: fixed;
-  bottom: 90px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--accent);
-  color: #fff;
-  border-radius: 20px;
-  padding: 10px 24px;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s, transform 0.2s;
-  z-index: 500;
-  pointer-events: none;
-}
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--accent); color: #fff; border-radius: 20px; padding: 10px 24px; font-size: 12px; white-space: nowrap; opacity: 0; transition: opacity 0.2s, transform 0.2s; z-index: 500; pointer-events: none; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ============================================================
@@ -539,97 +232,47 @@ header {
    ============================================================ */
 body.detail-page { padding-bottom: 40px; }
 
-.detail-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-}
-.back-btn {
-  background: none; border: none;
-  font-family: 'Noto Sans JP', sans-serif; font-size: 12px;
-  letter-spacing: 0.1em; color: var(--text-muted); cursor: pointer; padding: 6px 0;
-}
+.detail-header { position: sticky; top: 0; z-index: 100; background: rgba(248,247,244,0.94); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; }
+.back-btn { background: none; border: none; font-family: 'Noto Sans JP', sans-serif; font-size: 12px; letter-spacing: 0.1em; color: var(--text-muted); cursor: pointer; padding: 6px 0; }
 .back-btn:active { color: var(--accent); }
-.logo-sm { font-family: 'Noto Sans JP', sans-serif; font-size: 18px; font-weight: 300; letter-spacing: 0.18em; }
-.logo-sm span { color: var(--text); }
+.logo-sm { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 300; letter-spacing: 0.18em; }
+.logo-sm span { font-style: italic; color: var(--gold); }
 
-.detail-photo-wrap {
-  width: 100%; max-width: 540px; margin: 0 auto;
-  aspect-ratio: 4 / 5; background: var(--bg2); overflow: hidden;
-}
+.detail-photo-wrap { width: 100%; max-width: 540px; margin: 0 auto; aspect-ratio: 4/5; background: var(--bg2); overflow: hidden; }
 .detail-photo-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .detail-photo-emoji { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 90px; }
 
 .detail-content { max-width: 540px; margin: 0 auto; padding: 24px 24px 0; }
 
-/* 季節チップ群（詳細） */
 .detail-season-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-.detail-season-chip {
-  font-size: 11px; letter-spacing: 0.1em;
-  padding: 4px 12px; border-radius: 12px;
-  color: #fff; font-weight: 500;
-}
+.detail-season-chip { font-size: 11px; letter-spacing: 0.1em; padding: 4px 12px; border-radius: 12px; color: #fff; font-weight: 500; }
 .detail-season-chip.spring { background: var(--spring); }
 .detail-season-chip.summer { background: var(--summer); }
 .detail-season-chip.fall   { background: var(--fall); }
 .detail-season-chip.winter { background: var(--winter); }
 
-.detail-brand { font-family: 'Noto Sans JP', sans-serif; font-size: 17px; color: var(--text); margin-bottom: 4px; }
-.detail-name  { font-family: 'Noto Sans JP', sans-serif; font-size: 32px; font-weight: 300; letter-spacing: 0.06em; line-height: 1.2; margin-bottom: 16px; }
+.detail-brand { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-style: italic; color: var(--gold); margin-bottom: 4px; }
+.detail-name  { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; letter-spacing: 0.06em; line-height: 1.2; margin-bottom: 20px; }
 
-.chip-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
-.info-chip {
-  font-size: 11px; letter-spacing: 0.07em;
-  padding: 4px 13px; border-radius: 12px;
-  border: 1px solid var(--border2); background: var(--bg2); color: var(--text-mid);
-}
+/* 全フィールド情報テーブル */
+.info-table { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+.info-row { display: flex; border-bottom: 1px solid var(--border); }
+.info-row:last-child { border-bottom: none; }
+.info-label { width: 96px; flex-shrink: 0; padding: 10px 14px; font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em; background: var(--bg2); }
+.info-value { flex: 1; padding: 10px 14px; font-size: 13px; color: var(--text); }
 
-/* 統計ボックス */
-.stat-box {
-  display: flex;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-  margin-bottom: 28px;
-}
-.stat-cell { flex: 1; text-align: center; padding: 16px 8px; }
+.stat-box { display: flex; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 24px; }
+.stat-cell { flex: 1; text-align: center; padding: 14px 6px; }
 .stat-divider { width: 1px; background: var(--border); flex-shrink: 0; }
-.stat-num {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 26px; font-weight: 600; line-height: 1; margin-bottom: 5px;
-}
-.stat-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0.12em; }
+.stat-num { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+.stat-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; }
 
-/* 詳細アクション */
-.detail-wear-btn {
-  width: 100%; padding: 17px; border-radius: 14px; border: none;
-  background: var(--accent); color: #fff;
-  font-family: 'Noto Sans JP', sans-serif; font-size: 15px;
-  letter-spacing: 0.14em; cursor: pointer; margin-bottom: 12px;
-  transition: opacity 0.18s;
-}
+.detail-wear-btn { width: 100%; padding: 17px; border-radius: 14px; border: none; background: var(--accent); color: #fff; font-family: 'Noto Sans JP', sans-serif; font-size: 15px; letter-spacing: 0.14em; cursor: pointer; margin-bottom: 12px; }
 .detail-wear-btn:active { opacity: 0.78; }
-.detail-sub-row { display: flex; gap: 10px; }
-.detail-sub-btn {
-  flex: 1; padding: 13px; border-radius: 11px;
-  border: 1px solid var(--border2); background: var(--bg);
-  color: var(--text-mid); font-family: 'Noto Sans JP', sans-serif;
-  font-size: 12px; letter-spacing: 0.06em; cursor: pointer;
-  text-align: center; position: relative; overflow: hidden; display: block;
-  transition: background 0.16s;
-}
+
+.detail-sub-row { display: flex; gap: 8px; }
+.detail-sub-btn { flex: 1; padding: 12px 8px; border-radius: 11px; border: 1px solid var(--border2); background: var(--bg); color: var(--text-mid); font-family: 'Noto Sans JP', sans-serif; font-size: 11px; letter-spacing: 0.04em; cursor: pointer; text-align: center; position: relative; overflow: hidden; display: block; }
 .detail-sub-btn.danger { border-color: #f0ccc8; background: #fdf5f4; color: var(--danger); }
 .detail-sub-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }

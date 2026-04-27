@@ -35,16 +35,29 @@
     </div>
   </header>
 
-  <!-- ソートバー -->
-  <div class="toolbar">
-    <span class="toolbar-label">Sort</span>
-    <button class="chip active" onclick="setSort('count-desc',this)">着用↓</button>
-    <button class="chip"        onclick="setSort('count-asc', this)">着用↑</button>
-    <button class="chip"        onclick="setSort('name',      this)">名前順</button>
-    <button class="chip"        onclick="setSort('added',     this)">追加順</button>
+  <!-- 検索バー -->
+  <div class="search-bar">
+    <div class="search-inner">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="名前・ブランド・カテゴリ・素材・文化圏などで検索..."
+        oninput="onSearch(this.value)"
+      />
+      <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none">✕</button>
+    </div>
   </div>
 
-  <!-- 季節フィルター（4季） -->
+  <!-- ソート・フィルター -->
+  <div class="toolbar">
+    <span class="toolbar-label">Sort</span>
+    <button class="chip active" onclick="setSort('wear_count',this)">着用↓</button>
+    <button class="chip"        onclick="setSort('like_count', this)">お気に入り↓</button>
+    <button class="chip"        onclick="setSort('name',       this)">名前順</button>
+    <button class="chip"        onclick="setSort('created_at', this)">追加順</button>
+  </div>
   <div class="toolbar" style="padding-top:6px; padding-bottom:12px">
     <span class="toolbar-label">季節</span>
     <button class="chip season active" data-s="all"    onclick="setSeason('all',   this)">すべて</button>
@@ -54,16 +67,22 @@
     <button class="chip season"        data-s="winter" onclick="setSeason('winter',this)">❄ 冬</button>
   </div>
 
+  <!-- ローディング -->
+  <div id="loading" class="loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">読み込み中...</div>
+  </div>
+
   <!-- アイテム一覧 -->
-  <div class="grid" id="list"></div>
+  <div class="grid" id="list" style="display:none"></div>
 
   <!-- FAB -->
-  <button class="fab" onclick="openModal()">＋ アイテムを追加</button>
+  <button class="fab" onclick="openAddModal()">＋ アイテムを追加</button>
 
-  <!-- 追加モーダル -->
+  <!-- 追加・編集モーダル -->
   <div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
     <div class="modal">
-      <div class="modal-title">New Item</div>
+      <div class="modal-title" id="modal-title">New Item</div>
 
       <div class="field">
         <label>写真（任意）</label>
@@ -74,48 +93,77 @@
         </div>
       </div>
 
-      <div class="field">
-        <label>アイテム名 <span class="req">*</span></label>
-        <input type="text" id="inp-name" placeholder="例: ホワイトTシャツ" maxlength="30" />
+      <div class="field-row">
+        <div class="field">
+          <label>アイテム名 <span class="req">*</span></label>
+          <input type="text" id="inp-name" placeholder="例: G-1 Flight Jacket" maxlength="60" />
+        </div>
+        <div class="field">
+          <label>ブランド</label>
+          <input type="text" id="inp-brand" placeholder="例: USN" maxlength="40" />
+        </div>
       </div>
-      <div class="field">
-        <label>ブランド</label>
-        <input type="text" id="inp-brand" placeholder="例: Levi's" maxlength="40" />
+      <div class="field-row">
+        <div class="field">
+          <label>カテゴリ</label>
+          <select id="inp-cat">
+            <option value="jacket">ジャケット</option>
+            <option value="outer">アウター</option>
+            <option value="parka">パーカー</option>
+            <option value="sweat">スウェット</option>
+            <option value="shirt">シャツ</option>
+            <option value="knit">ニット</option>
+            <option value="vest">ベスト</option>
+            <option value="pants">パンツ</option>
+            <option value="shoes">シューズ</option>
+            <option value="bag">バッグ</option>
+            <option value="accessory">アクセサリー</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>カラー</label>
+          <input type="text" id="inp-color" placeholder="例: brown" maxlength="30" />
+        </div>
       </div>
-      <div class="field">
-        <label>カテゴリ</label>
-        <select id="inp-cat">
-          <option>ジャケット</option><option>アウター</option><option>パーカー</option>
-          <option>スウェット</option><option>シャツ</option><option>ニット</option>
-          <option>ベスト</option><option>パンツ</option><option>シューズ</option>
-          <option>バッグ</option><option>アクセサリー</option><option>その他</option>
-        </select>
+      <div class="field-row">
+        <div class="field">
+          <label>国</label>
+          <input type="text" id="inp-country" placeholder="例: us" maxlength="30" />
+        </div>
+        <div class="field">
+          <label>素材</label>
+          <input type="text" id="inp-fabric" placeholder="例: cotton" maxlength="40" />
+        </div>
       </div>
-      <div class="field">
-        <label>カラー</label>
-        <input type="text" id="inp-color" placeholder="例: navy" maxlength="30" />
+      <div class="field-row">
+        <div class="field">
+          <label>カルチャー</label>
+          <input type="text" id="inp-culture" placeholder="例: american casual" maxlength="40" />
+        </div>
+        <div class="field">
+          <label>年代</label>
+          <input type="text" id="inp-year" placeholder="例: 90s" maxlength="10" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>お気に入り度（1〜5）</label>
+          <input type="number" id="inp-like" min="1" max="5" placeholder="例: 4" />
+        </div>
+        <div class="field">
+          <label>着用回数</label>
+          <input type="number" id="inp-count" min="0" placeholder="例: 3" />
+        </div>
       </div>
 
-      <!-- 季節タグ（複数選択） -->
       <div class="field">
-        <label>季節タグ（複数選択可）</label>
+        <label>季節（複数選択可）</label>
         <div class="season-check-row">
-          <label class="season-check-opt">
-            <input type="checkbox" name="inp-seasons" value="spring" />
-            <span>🌸 春</span>
-          </label>
-          <label class="season-check-opt">
-            <input type="checkbox" name="inp-seasons" value="summer" />
-            <span>☀ 夏</span>
-          </label>
-          <label class="season-check-opt">
-            <input type="checkbox" name="inp-seasons" value="fall" />
-            <span>🍂 秋</span>
-          </label>
-          <label class="season-check-opt">
-            <input type="checkbox" name="inp-seasons" value="winter" />
-            <span>❄ 冬</span>
-          </label>
+          <label class="season-check-opt"><input type="checkbox" name="inp-seasons" value="spring"><span>🌸 春</span></label>
+          <label class="season-check-opt"><input type="checkbox" name="inp-seasons" value="summer"><span>☀ 夏</span></label>
+          <label class="season-check-opt"><input type="checkbox" name="inp-seasons" value="fall"  ><span>🍂 秋</span></label>
+          <label class="season-check-opt"><input type="checkbox" name="inp-seasons" value="winter"><span>❄ 冬</span></label>
         </div>
       </div>
 
@@ -125,7 +173,7 @@
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
-        <button class="btn-add"    onclick="addItem()">追加する</button>
+        <button class="btn-add" id="modal-submit-btn" onclick="submitItem()">追加する</button>
       </div>
     </div>
   </div>
@@ -136,7 +184,7 @@
       <div class="modal-title">CSV インポート</div>
       <div id="csv-preview-text" style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:20px"></div>
       <div class="field">
-        <label>重複アイテムの扱い</label>
+        <label>重複アイテムの扱い（名前＋ブランドで判定）</label>
         <div class="radio-row">
           <label class="radio-opt"><input type="radio" name="dup" value="skip" checked><span>スキップ</span></label>
           <label class="radio-opt"><input type="radio" name="dup" value="overwrite"><span>上書き</span></label>
@@ -145,12 +193,14 @@
       </div>
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeCsvModal()">キャンセル</button>
-        <button class="btn-add"    onclick="confirmImport()">インポート実行</button>
+        <button class="btn-add" onclick="confirmImport()">インポート実行</button>
       </div>
     </div>
   </div>
 
   <div class="toast" id="toast"></div>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

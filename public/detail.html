@@ -15,54 +15,161 @@
     <div class="logo-sm">MY <span>Wardrobe</span></div>
   </div>
 
-  <!-- 写真 -->
-  <div class="detail-photo-wrap" id="detail-photo"></div>
+  <div id="detail-loading" class="loading">
+    <div class="loading-spinner"></div>
+  </div>
 
-  <div class="detail-content">
+  <div id="detail-body" style="display:none">
 
-    <!-- 季節チップ群 -->
-    <div class="detail-season-chips" id="detail-seasons"></div>
+    <!-- 写真 -->
+    <div class="detail-photo-wrap" id="detail-photo"></div>
 
-    <!-- 名前・ブランド -->
-    <div class="detail-brand" id="detail-brand"></div>
-    <div class="detail-name"  id="detail-name"></div>
+    <div class="detail-content">
 
-    <!-- 情報チップ -->
-    <div class="chip-row" id="detail-chips"></div>
+      <!-- 季節チップ -->
+      <div class="detail-season-chips" id="detail-seasons"></div>
 
-    <!-- 統計 -->
-    <div class="stat-box">
-      <div class="stat-cell">
-        <div class="stat-num"   id="s-count">—</div>
-        <div class="stat-label">着用回数</div>
+      <!-- 名前・ブランド -->
+      <div class="detail-brand" id="detail-brand"></div>
+      <div class="detail-name"  id="detail-name"></div>
+
+      <!-- 全フィールド情報テーブル -->
+      <div class="detail-info-table" id="detail-info-table"></div>
+
+      <!-- 統計 -->
+      <div class="stat-box">
+        <div class="stat-cell">
+          <div class="stat-num" id="s-count">—</div>
+          <div class="stat-label">着用回数</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-cell">
+          <div class="stat-num" id="s-like">—</div>
+          <div class="stat-label">お気に入り</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-cell">
+          <div class="stat-num" id="s-last">—</div>
+          <div class="stat-label">最終着用</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-cell">
+          <div class="stat-num" id="s-added">—</div>
+          <div class="stat-label">登録日</div>
+        </div>
       </div>
-      <div class="stat-divider"></div>
-      <div class="stat-cell">
-        <div class="stat-num"   id="s-last">—</div>
-        <div class="stat-label">最終着用</div>
+
+      <!-- アクション -->
+      <button class="detail-wear-btn" onclick="wearItem()">＋ 今日着た</button>
+
+      <div class="detail-sub-row">
+        <button class="detail-sub-btn" onclick="openEditModal()">✏️ 編集</button>
+        <label class="detail-sub-btn">
+          📷 写真を変更
+          <input type="file" accept="image/*" onchange="changePhoto(event)" />
+        </label>
+        <button class="detail-sub-btn danger" onclick="deleteItem()">🗑 削除</button>
       </div>
-      <div class="stat-divider"></div>
-      <div class="stat-cell">
-        <div class="stat-num"   id="s-added">—</div>
-        <div class="stat-label">登録日</div>
+
+    </div>
+  </div>
+
+  <!-- 編集モーダル（index.html と同じ構造） -->
+  <div class="modal-overlay" id="edit-modal" onclick="handleEditOverlayClick(event)">
+    <div class="modal">
+      <div class="modal-title">アイテムを編集</div>
+
+      <div class="field">
+        <label>写真</label>
+        <div class="photo-drop" id="edit-photo-area">
+          <div id="edit-upload-icon">📷</div>
+          <div id="edit-upload-text" class="upload-text">タップして写真を変更</div>
+          <input type="file" accept="image/*" id="edit-photo-input" onchange="previewEditPhoto(event)" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>アイテム名 <span class="req">*</span></label>
+          <input type="text" id="edit-name" maxlength="60" />
+        </div>
+        <div class="field">
+          <label>ブランド</label>
+          <input type="text" id="edit-brand" maxlength="40" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>カテゴリ</label>
+          <select id="edit-cat">
+            <option value="jacket">ジャケット</option>
+            <option value="outer">アウター</option>
+            <option value="parka">パーカー</option>
+            <option value="sweat">スウェット</option>
+            <option value="shirt">シャツ</option>
+            <option value="knit">ニット</option>
+            <option value="vest">ベスト</option>
+            <option value="pants">パンツ</option>
+            <option value="shoes">シューズ</option>
+            <option value="bag">バッグ</option>
+            <option value="accessory">アクセサリー</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>カラー</label>
+          <input type="text" id="edit-color" maxlength="30" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>国</label>
+          <input type="text" id="edit-country" maxlength="30" />
+        </div>
+        <div class="field">
+          <label>素材</label>
+          <input type="text" id="edit-fabric" maxlength="40" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>カルチャー</label>
+          <input type="text" id="edit-culture" maxlength="40" />
+        </div>
+        <div class="field">
+          <label>年代</label>
+          <input type="text" id="edit-year" maxlength="10" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>お気に入り度（1〜5）</label>
+          <input type="number" id="edit-like" min="1" max="5" />
+        </div>
+        <div class="field">
+          <label>着用回数</label>
+          <input type="number" id="edit-count" min="0" />
+        </div>
+      </div>
+      <div class="field">
+        <label>季節（複数選択可）</label>
+        <div class="season-check-row">
+          <label class="season-check-opt"><input type="checkbox" name="edit-seasons" value="spring"><span>🌸 春</span></label>
+          <label class="season-check-opt"><input type="checkbox" name="edit-seasons" value="summer"><span>☀ 夏</span></label>
+          <label class="season-check-opt"><input type="checkbox" name="edit-seasons" value="fall"  ><span>🍂 秋</span></label>
+          <label class="season-check-opt"><input type="checkbox" name="edit-seasons" value="winter"><span>❄ 冬</span></label>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeEditModal()">キャンセル</button>
+        <button class="btn-add" onclick="saveEdit()">保存する</button>
       </div>
     </div>
-
-    <!-- アクション -->
-    <button class="detail-wear-btn" onclick="wearItem()">＋ 今日着た</button>
-
-    <div class="detail-sub-row">
-      <label class="detail-sub-btn">
-        📷 写真を変更
-        <input type="file" accept="image/*" onchange="changePhoto(event)" />
-      </label>
-      <button class="detail-sub-btn danger" onclick="deleteItem()">🗑 削除</button>
-    </div>
-
   </div>
 
   <div class="toast" id="toast"></div>
-  <script src="app.js"></script>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
   <script src="detail.js"></script>
 </body>
 </html>
