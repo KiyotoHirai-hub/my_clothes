@@ -602,11 +602,13 @@ function showToast(msg) {
 }
 
 /* =====================================================
-   初期化
+   初期化（configReady を待ってから実行）
    ===================================================== */
 
 if (typeof window !== 'undefined') {
   renderEmojiGrid();
-  loadWeather();
-  loadAndRender();
+  configReady.then(() => {
+    loadWeather();
+    loadAndRender();
+  });
 }
