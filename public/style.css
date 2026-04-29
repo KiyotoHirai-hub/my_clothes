@@ -9,7 +9,7 @@
   --border:    #e2ddd6;
   --border2:   #ccc8c0;
   --accent:    #2c2c2c;
-  --gold:      #b89a6a;
+  --gold:      #1a1a18;
   --text:      #1a1a18;
   --text-mid:  #555550;
   --text-muted:#9a9690;
@@ -39,7 +39,7 @@ body {
   max-width: 540px; margin: 0 auto; padding: 7px 20px;
   display: flex; align-items: center; gap: 10px; font-size: 12px; flex-wrap: wrap;
 }
-.w-temp { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 600; }
+.w-temp { font-family: 'Noto Sans JP', sans-serif; font-size: 15px; font-weight: 600; }
 .weather-season-badge {
   margin-left: auto; padding: 2px 10px; border-radius: 10px;
   font-size: 10px; font-weight: 500; background: rgba(255,255,255,0.18);
@@ -60,8 +60,8 @@ header {
   max-width: 540px; margin: 0 auto; padding: 12px 20px 10px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.logo { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 300; letter-spacing: 0.22em; }
-.logo span { font-style: italic; color: var(--gold); }
+.logo { font-family: 'Noto Sans JP', sans-serif; font-size: 26px; font-weight: 300; letter-spacing: 0.22em; }
+.logo span { color: var(--gold); }
 .header-right { display: flex; align-items: center; gap: 12px; }
 .header-count { font-size: 11px; color: var(--text-muted); letter-spacing: 0.12em; }
 .csv-import-btn {
@@ -157,7 +157,7 @@ header {
 
 .card-body { padding: 10px 10px 6px; flex: 1; display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
 .card-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card-brand { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-style: italic; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-brand { font-family: 'Noto Sans JP', sans-serif; font-size: 13px; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-meta { font-size: 10px; color: var(--text-muted); }
 .card-stars { font-size: 10px; color: var(--gold); letter-spacing: 1px; }
 .card-badge { display: inline-block; font-size: 9px; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 8px; border: 1px solid var(--border2); color: var(--text-muted); background: var(--bg2); margin-top: 4px; width: fit-content; }
@@ -165,7 +165,7 @@ header {
 .card-badge.high { background: #fdf8ee; border-color: #ddc98a; color: #9a7830; }
 
 .card-footer { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px 10px; border-top: 1px solid var(--border); }
-.wear-num { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; line-height: 1; }
+.wear-num { font-family: 'Noto Sans JP', sans-serif; font-size: 24px; font-weight: 600; line-height: 1; }
 .wear-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0.12em; margin-top: 1px; }
 .wear-btn { width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--accent); background: transparent; color: var(--accent); font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.14s, color 0.14s, transform 0.1s; -webkit-tap-highlight-color: transparent; }
 .wear-btn:active { background: var(--accent); color: #fff; transform: scale(0.88); }
@@ -181,7 +181,7 @@ header {
 .modal-overlay.open { opacity: 1; pointer-events: all; }
 .modal { width: 100%; max-width: 540px; margin: 0 auto; background: var(--surface); border-radius: 22px 22px 16px 16px; padding: 22px 20px 32px; transform: translateY(50px); transition: transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1); max-height: 92vh; overflow-y: auto; }
 .modal-overlay.open .modal { transform: translateY(0); }
-.modal-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; letter-spacing: 0.18em; margin-bottom: 18px; }
+.modal-title { font-family: 'Noto Sans JP', sans-serif; font-size: 22px; font-weight: 300; letter-spacing: 0.18em; margin-bottom: 18px; }
 
 /* フィールド */
 .field { margin-bottom: 12px; }
@@ -235,8 +235,8 @@ body.detail-page { padding-bottom: 40px; }
 .detail-header { position: sticky; top: 0; z-index: 100; background: rgba(248,247,244,0.94); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; }
 .back-btn { background: none; border: none; font-family: 'Noto Sans JP', sans-serif; font-size: 12px; letter-spacing: 0.1em; color: var(--text-muted); cursor: pointer; padding: 6px 0; }
 .back-btn:active { color: var(--accent); }
-.logo-sm { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 300; letter-spacing: 0.18em; }
-.logo-sm span { font-style: italic; color: var(--gold); }
+.logo-sm { font-family: 'Noto Sans JP', sans-serif; font-size: 18px; font-weight: 300; letter-spacing: 0.18em; }
+.logo-sm span { color: var(--gold); }
 
 .detail-photo-wrap { width: 100%; max-width: 540px; margin: 0 auto; aspect-ratio: 4/5; background: var(--bg2); overflow: hidden; }
 .detail-photo-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -251,8 +251,8 @@ body.detail-page { padding-bottom: 40px; }
 .detail-season-chip.fall   { background: var(--fall); }
 .detail-season-chip.winter { background: var(--winter); }
 
-.detail-brand { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-style: italic; color: var(--gold); margin-bottom: 4px; }
-.detail-name  { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; letter-spacing: 0.06em; line-height: 1.2; margin-bottom: 20px; }
+.detail-brand { font-family: 'Noto Sans JP', sans-serif; font-size: 17px; color: var(--gold); margin-bottom: 4px; }
+.detail-name  { font-family: 'Noto Sans JP', sans-serif; font-size: 32px; font-weight: 300; letter-spacing: 0.06em; line-height: 1.2; margin-bottom: 20px; }
 
 /* 全フィールド情報テーブル */
 .info-table { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
@@ -264,7 +264,7 @@ body.detail-page { padding-bottom: 40px; }
 .stat-box { display: flex; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 24px; }
 .stat-cell { flex: 1; text-align: center; padding: 14px 6px; }
 .stat-divider { width: 1px; background: var(--border); flex-shrink: 0; }
-.stat-num { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+.stat-num { font-family: 'Noto Sans JP', sans-serif; font-size: 22px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
 .stat-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; }
 
 .detail-wear-btn { width: 100%; padding: 17px; border-radius: 14px; border: none; background: var(--accent); color: #fff; font-family: 'Noto Sans JP', sans-serif; font-size: 15px; letter-spacing: 0.14em; cursor: pointer; margin-bottom: 12px; }
