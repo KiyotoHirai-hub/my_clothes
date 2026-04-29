@@ -1,18 +1,16 @@
 /**
  * db.js — Supabase JS SDK を使ったデータアクセス層
- * config.js で初期化された `supabase` クライアントを使う
+ * config.js で初期化された supabaseClient を使う。
  */
 
 /* ── アイテム一覧取得 ─────────────────────────────────── */
 async function dbGetItems({ season, search, sort } = {}) {
-  let query = supabase.from('items').select('*');
+  let query = supabaseClient.from('items').select('*');
 
-  // 季節フィルター
   if (season && season !== 'all') {
     query = query.eq(season, true);
   }
 
-  // 検索（複数フィールドをORで部分一致）
   if (search && search.trim()) {
     const q = search.trim();
     query = query.or(
@@ -22,7 +20,6 @@ async function dbGetItems({ season, search, sort } = {}) {
     );
   }
 
-  // ソート
   const ORDER = {
     wear_count: { col: 'wear_count', asc: false },
     like_count: { col: 'like_count', asc: false },
@@ -39,7 +36,7 @@ async function dbGetItems({ season, search, sort } = {}) {
 
 /* ── アイテム1件取得 ──────────────────────────────────── */
 async function dbGetItem(id) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('items')
     .select('*')
     .eq('id', id)
@@ -49,31 +46,31 @@ async function dbGetItem(id) {
 }
 
 /* ── アイテム追加 ─────────────────────────────────────── */
-async function dbAddItem(data) {
-  const { data: rows, error } = await supabase
+async function dbAddItem(itemData) {
+  const { data, error } = await supabaseClient
     .from('items')
-    .insert(data)
+    .insert(itemData)
     .select()
     .single();
   if (error) throw new Error(`dbAddItem: ${error.message}`);
-  return rows;
+  return data;
 }
 
 /* ── アイテム更新 ─────────────────────────────────────── */
-async function dbUpdateItem(id, data) {
-  const { data: rows, error } = await supabase
+async function dbUpdateItem(id, itemData) {
+  const { data, error } = await supabaseClient
     .from('items')
-    .update(data)
+    .update(itemData)
     .eq('id', id)
     .select()
     .single();
   if (error) throw new Error(`dbUpdateItem: ${error.message}`);
-  return rows;
+  return data;
 }
 
 /* ── アイテム削除 ─────────────────────────────────────── */
 async function dbDeleteItem(id) {
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('items')
     .delete()
     .eq('id', id);
@@ -88,9 +85,8 @@ async function dbWear(id, currentCount) {
   });
 }
 
-/* ── 写真アップロード（Supabase Storage） ────────────── */
+/* ── 写真アップロード ─────────────────────────────────── */
 async function dbUploadPhoto(itemId, base64DataUrl) {
-  // Base64 → Blob 変換
   const [meta, b64] = base64DataUrl.split(',');
   const mime   = meta.match(/:(.*?);/)[1];
   const binary = atob(b64);
@@ -100,14 +96,13 @@ async function dbUploadPhoto(itemId, base64DataUrl) {
 
   const filename = `${itemId}.jpg`;
 
-  const { error } = await supabase.storage
+  const { error } = await supabaseClient.storage
     .from(STORAGE_BUCKET)
     .upload(filename, blob, { upsert: true, contentType: mime });
 
   if (error) throw new Error(`dbUploadPhoto: ${error.message}`);
 
-  // 公開URLを取得
-  const { data } = supabase.storage
+  const { data } = supabaseClient.storage
     .from(STORAGE_BUCKET)
     .getPublicUrl(filename);
 
@@ -117,7 +112,7 @@ async function dbUploadPhoto(itemId, base64DataUrl) {
 /* ── 写真削除 ─────────────────────────────────────────── */
 async function dbDeletePhoto(itemId) {
   try {
-    await supabase.storage
+    await supabaseClient.storage
       .from(STORAGE_BUCKET)
       .remove([`${itemId}.jpg`]);
   } catch (e) {

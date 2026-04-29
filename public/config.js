@@ -1,28 +1,32 @@
 /**
- * config.js — /api/config から接続情報を取得して Supabase クライアントを初期化する
+ * config.js
+ * Supabase クライアントを初期化する。
+ * window.supabase は CDN の SDK が設定済みなので let 宣言しない。
  */
 
-let SUPABASE_URL      = '';
-let SUPABASE_ANON_KEY = '';
-let STORAGE_BUCKET    = 'item-photos';
-let supabase          = null; // Supabase JS SDK クライアント
+// db.js が参照するグローバル変数
+var SUPABASE_URL      = '';
+var SUPABASE_ANON_KEY = '';
+var STORAGE_BUCKET    = 'item-photos';
+var supabaseClient    = null; // SDKクライアント（supabase という名前を避ける）
 
-const configReady = fetch('/api/config')
-  .then(r => r.json())
-  .then(d => {
-    SUPABASE_URL      = d.supabaseUrl;
-    SUPABASE_ANON_KEY = d.supabaseAnonKey;
-    STORAGE_BUCKET    = d.storageBucket || 'item-photos';
+var configReady = fetch('/api/config')
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    SUPABASE_URL      = d.supabaseUrl      || '';
+    SUPABASE_ANON_KEY = d.supabaseAnonKey  || '';
+    STORAGE_BUCKET    = d.storageBucket    || 'item-photos';
 
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      throw new Error('Supabase の接続情報が設定されていません（Vercel環境変数を確認）');
+      throw new Error('Supabase の接続情報が取得できませんでした');
     }
 
-    // Supabase JS SDK でクライアントを生成
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('[config] Supabase client initialized ✓');
+    // window.supabase は CDN SDK のオブジェクト、createClient を呼ぶ
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('[config] Supabase client ready ✓');
   })
-  .catch(e => {
-    console.error('[config] failed:', e);
-    throw e;
+  .catch(function(e) {
+    console.error('[config] 初期化失敗:', e.message);
+    // エラーでも configReady を reject させて呼び出し元でキャッチできるようにする
+    return Promise.reject(e);
   });
