@@ -143,6 +143,14 @@ async function loadAndRender() {
   loadingEl.style.display = 'flex';
 
   try {
+    // 接続情報のバリデーション
+    if (!SUPABASE_URL || SUPABASE_URL.includes('xxxxxxxxxxx')) {
+      throw new Error('config.js の SUPABASE_URL が設定されていません');
+    }
+    if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('eyJxxxxxxxxxx')) {
+      throw new Error('config.js の SUPABASE_ANON_KEY が設定されていません');
+    }
+
     const items = await dbGetItems({
       season: currentSeason,
       search: currentSearch,
@@ -150,8 +158,24 @@ async function loadAndRender() {
     });
     renderList(items);
   } catch (e) {
-    showToast('データの取得に失敗しました');
-    console.error(e);
+    console.error('[loadAndRender]', e);
+    // エラー内容を画面に表示
+    listEl.innerHTML = `
+      <div class="empty" style="grid-column:1/-1">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-text" style="color:var(--danger);font-size:12px;text-align:left;background:var(--surface);border:1px solid #f0ccc8;border-radius:12px;padding:16px;line-height:1.8">
+          <strong>データの取得に失敗しました</strong><br>
+          ${escHtml(e.message)}<br><br>
+          確認事項:<br>
+          ① config.js の SUPABASE_URL・SUPABASE_ANON_KEY が正しく設定されているか<br>
+          ② Supabase の items テーブルが存在するか<br>
+          ③ RLS ポリシーで SELECT が許可されているか<br>
+          ④ ブラウザのコンソール（F12）で詳細エラーを確認する
+        </div>
+      </div>`;
+    listEl.style.display = '';
+    loadingEl.style.display = 'none';
+    return;
   } finally {
     loadingEl.style.display = 'none';
     listEl.style.display    = '';

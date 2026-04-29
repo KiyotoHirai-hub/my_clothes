@@ -1,186 +1,147 @@
 /**
- * db.js — Supabase との全通信を担当するレイヤー
- * app.js / detail.js はこのファイルの関数を通してデータを読み書きする。
+ * db.js — Supabase REST API との通信レイヤー
  */
 
-// Supabase JS SDK（CDN から読み込み済み想定 → index.html / detail.html に追加する）
-// ここでは fetch ベースの薄いラッパーとして実装（SDK 不要）
+const API         = `${SUPABASE_URL}/rest/v1`;
+const STORAGE_API = `${SUPABASE_URL}/storage/v1/object`;
+const STORAGE_PUB = `${SUPABASE_URL}/storage/v1/object/public`;
 
-const API = `${SUPABASE_URL}/rest/v1`;
-const STORAGE_URL = `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}`;
-
-const HEADERS = {
+const BASE_HEADERS = {
   'apikey':        SUPABASE_ANON_KEY,
   'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
   'Content-Type':  'application/json',
   'Prefer':        'return=representation',
 };
 
-/* =====================================================
-   汎用 fetch ラッパー
-   ===================================================== */
-
+/* ── 汎用 fetch ───────────────────────────────────────── */
 async function sbFetch(path, options = {}) {
-  const res = await fetch(`${API}${path}`, {
+  const url = `${API}${path}`;
+  const res = await fetch(url, {
     ...options,
-    headers: { ...HEADERS, ...options.headers },
+    headers: { ...BASE_HEADERS, ...options.headers },
   });
+
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Supabase error ${res.status}: ${err}`);
+    const body = await res.text();
+    console.error('[Supabase] error', res.status, url, body);
+    throw new Error(`Supabase ${res.status}: ${body}`);
   }
-  // 204 No Content
   if (res.status === 204) return null;
   return res.json();
 }
 
-/* =====================================================
-   アイテム一覧取得
-   ===================================================== */
-
-/**
- * アイテムを取得する。
- * @param {{ season?: string, search?: string, sort?: string }} opts
- * @returns {Promise<Item[]>}
- */
+/* ── アイテム一覧 ─────────────────────────────────────── */
 async function dbGetItems({ season, search, sort } = {}) {
   const params = new URLSearchParams();
 
-  // 季節フィルター
+  // 季節フィルター: PostgREST では ?spring=eq.true の形
   if (season && season !== 'all') {
-    params.set(season, 'eq.true');
+    params.append(season, 'eq.true');
   }
 
-  // 全文検索（PostgreSQL の ilike で複数フィールド検索）
+  // 検索: 複数フィールドを OR で部分一致
   if (search && search.trim()) {
-    const q = search.trim();
-    // or クエリ: 複数フィールドに部分一致
-    params.set('or', `(name.ilike.*${q}*,brand.ilike.*${q}*,category.ilike.*${q}*,culture.ilike.*${q}*,color.ilike.*${q}*,country.ilike.*${q}*,fabric.ilike.*${q}*,year.ilike.*${q}*)`);
+    const q = encodeURIComponent(search.trim());
+    params.append(
+      'or',
+      `(name.ilike.*${q}*,brand.ilike.*${q}*,category.ilike.*${q}*,` +
+      `culture.ilike.*${q}*,color.ilike.*${q}*,country.ilike.*${q}*,` +
+      `fabric.ilike.*${q}*,year.ilike.*${q}*)`
+    );
   }
 
   // ソート
-  const sortMap = {
-    'wear_count':  'wear_count.desc',
-    'like_count':  'like_count.desc',
-    'name':        'name.asc',
-    'created_at':  'created_at.desc',
+  const ORDER = {
+    wear_count: 'wear_count.desc.nullslast',
+    like_count: 'like_count.desc.nullslast',
+    name:       'name.asc.nullslast',
+    created_at: 'created_at.desc.nullslast',
   };
-  params.set('order', sortMap[sort] || 'wear_count.desc');
+  params.append('order', ORDER[sort] || 'wear_count.desc.nullslast');
 
-  const query = params.toString() ? `?${params}` : '';
-  return sbFetch(`/items${query}`);
+  const qs = params.toString();
+  return sbFetch(`/items${qs ? '?' + qs : ''}`);
 }
 
-/* =====================================================
-   アイテム1件取得
-   ===================================================== */
-
+/* ── アイテム1件 ──────────────────────────────────────── */
 async function dbGetItem(id) {
-  const rows = await sbFetch(`/items?id=eq.${id}`);
-  return rows?.[0] || null;
+  const rows = await sbFetch(`/items?id=eq.${id}&limit=1`);
+  return rows?.[0] ?? null;
 }
 
-/* =====================================================
-   アイテム追加
-   ===================================================== */
-
+/* ── アイテム追加 ─────────────────────────────────────── */
 async function dbAddItem(data) {
   const rows = await sbFetch('/items', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body:   JSON.stringify(data),
   });
-  return rows?.[0] || null;
+  return rows?.[0] ?? null;
 }
 
-/* =====================================================
-   アイテム更新
-   ===================================================== */
-
+/* ── アイテム更新 ─────────────────────────────────────── */
 async function dbUpdateItem(id, data) {
   const rows = await sbFetch(`/items?id=eq.${id}`, {
     method: 'PATCH',
-    body: JSON.stringify(data),
+    body:   JSON.stringify(data),
   });
-  return rows?.[0] || null;
+  return rows?.[0] ?? null;
 }
 
-/* =====================================================
-   アイテム削除
-   ===================================================== */
-
+/* ── アイテム削除 ─────────────────────────────────────── */
 async function dbDeleteItem(id) {
   await sbFetch(`/items?id=eq.${id}`, { method: 'DELETE' });
 }
 
-/* =====================================================
-   着用回数 +1
-   ===================================================== */
-
+/* ── 着用 +1 ──────────────────────────────────────────── */
 async function dbWear(id, currentCount) {
   return dbUpdateItem(id, {
-    wear_count: currentCount + 1,
+    wear_count: (currentCount || 0) + 1,
     last_worn:  new Date().toISOString(),
   });
 }
 
-/* =====================================================
-   写真アップロード（Supabase Storage）
-   ===================================================== */
-
-/**
- * Base64 画像を Supabase Storage にアップロードして URL を返す。
- * @param {string} itemId
- * @param {string} base64DataUrl
- * @returns {Promise<string>} 公開 URL
- */
+/* ── 写真アップロード ─────────────────────────────────── */
 async function dbUploadPhoto(itemId, base64DataUrl) {
-  // Base64 → Blob に変換
-  const [meta, data] = base64DataUrl.split(',');
-  const mime = meta.match(/:(.*?);/)[1];
-  const binary = atob(data);
-  const bytes = new Uint8Array(binary.length);
+  const [meta, b64] = base64DataUrl.split(',');
+  const mime   = meta.match(/:(.*?);/)[1];
+  const binary = atob(b64);
+  const bytes  = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   const blob = new Blob([bytes], { type: mime });
 
   const filename = `${itemId}.jpg`;
-
-  // Storage にアップロード（upsert）
-  const res = await fetch(
-    `${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${filename}`,
-    {
-      method: 'POST',
-      headers: {
-        'apikey':        SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type':  mime,
-        'x-upsert':      'true',
-      },
-      body: blob,
-    }
-  );
+  const res = await fetch(`${STORAGE_API}/${STORAGE_BUCKET}/${filename}`, {
+    method:  'POST',
+    headers: {
+      'apikey':        SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type':  mime,
+      'x-upsert':      'true',
+    },
+    body: blob,
+  });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Storage upload error: ${err}`);
+    throw new Error(`Storage upload failed: ${err}`);
   }
 
-  // 公開 URL を返す（キャッシュバスター付き）
-  return `${STORAGE_URL}/${filename}?t=${Date.now()}`;
+  // キャッシュバスター付き公開 URL
+  return `${STORAGE_PUB}/${STORAGE_BUCKET}/${filename}?t=${Date.now()}`;
 }
 
-/* =====================================================
-   写真削除（Supabase Storage）
-   ===================================================== */
-
+/* ── 写真削除 ─────────────────────────────────────────── */
 async function dbDeletePhoto(itemId) {
-  await fetch(
-    `${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${itemId}.jpg`,
-    {
-      method: 'DELETE',
+  // エラーになっても続行（写真がない場合もある）
+  try {
+    await fetch(`${STORAGE_API}/${STORAGE_BUCKET}/${itemId}.jpg`, {
+      method:  'DELETE',
       headers: {
         'apikey':        SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
       },
-    }
-  );
+    });
+  } catch (e) {
+    console.warn('[dbDeletePhoto]', e);
+  }
 }
