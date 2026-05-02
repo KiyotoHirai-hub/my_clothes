@@ -1,10 +1,16 @@
 /**
- * coord.js — コーデ提案ページのロジック
+ * coord.js — コーデ提案ロジック（API不要・ルールベース）
+ *
+ * 3パターンを生成:
+ *   rare   : 着用回数が少ないアイテム優先
+ *   color  : 全体の色を3色以内に絞ったコーデ
+ *   season : 今日の気温・季節に最も適したコーデ
  */
 
 /* =====================================================
-   ファッション系統
+   定数
    ===================================================== */
+
 var STYLES = [
   { id: 'american', icon: '🇺🇸', name: 'American Casual', desc: 'デニム・チノ・ミリタリー' },
   { id: 'outdoor',  icon: '🏕️',  name: 'Outdoor',         desc: 'アウトドア・機能系ブランド' },
@@ -13,6 +19,36 @@ var STYLES = [
   { id: 'work',     icon: '👔',  name: 'Work / Smart',     desc: 'きれいめ・オフィスカジュアル' },
   { id: 'vintage',  icon: '📼',  name: 'Vintage',          desc: '古着・ユーズド感のあるスタイル' },
 ];
+
+// カテゴリ → 役割マッピング
+var ROLE = {
+  tops:    ['shirt', 'knit', 'parka', 'sweat', 'vest'],
+  bottoms: ['pants'],
+  outer:   ['jacket', 'outer'],
+  all:     ['shirt', 'knit', 'parka', 'sweat', 'vest', 'pants', 'jacket', 'outer', 'shoes', 'bag', 'accessory', 'other'],
+};
+
+// 系統 → 関連キーワード（culture / category / fabric でスコアリング）
+var STYLE_KEYWORDS = {
+  american: ['american', 'us', 'military', 'denim', 'workwear', 'cadual', 'casual', 'anorak'],
+  outdoor:  ['outdoor', 'mountain', 'patagonia', 'arcteryx', 'fleece', 'down', 'gore', 'nylon'],
+  street:   ['street', 'skate', 'nike', 'adidas', 'sport', 'hoodie', 'parka', 'sweat'],
+  euro:     ['euro', 'european', 'minimal', 'clean', 'jp', 'tailored', 'corduroy'],
+  work:     ['work', 'tailored', 'slacks', 'shirt', 'smart', 'office', 'clean'],
+  vintage:  ['vintage', '80s', '90s', '70s', '00s', 'used', 'retro', 'old'],
+};
+
+// 色グループ（近い色をまとめる）
+var COLOR_GROUPS = {
+  dark:   ['black', 'navy', 'dark', 'charcoal', 'blackish'],
+  white:  ['white', 'off white', 'cream', 'ivory', 'light gray', 'light grey'],
+  gray:   ['gray', 'grey', 'silver'],
+  brown:  ['brown', 'tan', 'beige', 'camel', 'khaki', 'sand', 'earth'],
+  blue:   ['blue', 'denim', 'indigo', 'cobalt', 'sky'],
+  green:  ['green', 'olive', 'khaki', 'sage', 'forest', 'moss', 'light green'],
+  red:    ['red', 'burgundy', 'wine', 'maroon', 'deep red', 'brick'],
+  other:  [],
+};
 
 /* =====================================================
    状態
@@ -23,13 +59,9 @@ var allItems       = [];
 
 /* =====================================================
    起動
-   系統グリッドはすぐ描画。天気・アイテムは config 待ち。
    ===================================================== */
-
-// 系統グリッドは config に依存しないのでページ読み込み直後に描画
 renderStyleGrid();
 
-// 天気・アイテムは configReady 後
 configReady.then(function() {
   loadWeatherData();
   loadItems();
@@ -55,29 +87,14 @@ async function loadWeatherData() {
       (weatherData.emoji || '🌡️') + '  ' + tempStr + '  ' + (weatherData.weather || '');
 
     var month  = new Date().getMonth() + 1;
-    var temp   = weatherData.temp != null ? weatherData.temp : weatherData.tempMax;
+    var temp   = currentTemp();
     var season = detectSeason(month, temp);
     document.getElementById('ws-desc').textContent =
       (weatherData.date || '') + ' · ' + seasonLabel(season) + 'の気温帯';
 
   } catch (e) {
-    console.error('loadWeatherData:', e);
     document.getElementById('ws-temp').textContent = '天気を取得できませんでした';
   }
-}
-
-function detectSeason(month, temp) {
-  if (temp >= 25) return 'summer';
-  if (temp <= 10) return 'winter';
-  if (month >= 3 && month <= 6)  return 'spring';
-  if (month >= 9 && month <= 11) return 'fall';
-  if (month >= 7 && month <= 8)  return 'summer';
-  return 'winter';
-}
-
-function seasonLabel(s) {
-  var map = { spring: '春', summer: '夏', fall: '秋', winter: '冬' };
-  return map[s] || s;
 }
 
 /* =====================================================
@@ -87,13 +104,12 @@ async function loadItems() {
   try {
     allItems = await dbGetItems({ sort: 'wear_count' });
   } catch (e) {
-    console.error('loadItems:', e);
     showToast('アイテムの取得に失敗しました');
   }
 }
 
 /* =====================================================
-   系統グリッド描画
+   系統グリッド
    ===================================================== */
 function renderStyleGrid() {
   var grid = document.getElementById('style-grid');
@@ -102,7 +118,7 @@ function renderStyleGrid() {
     return '<div class="style-card" data-id="' + s.id + '" onclick="toggleStyle(\'' + s.id + '\', this)">'
       + '<div class="style-card-icon">' + s.icon + '</div>'
       + '<div class="style-card-name">' + s.name + '</div>'
-      + '<div class="style-card-desc">'  + s.desc + '</div>'
+      + '<div class="style-card-desc">' + s.desc + '</div>'
       + '</div>';
   }).join('');
 }
@@ -119,168 +135,305 @@ function toggleStyle(id, el) {
 }
 
 /* =====================================================
-   コーデ生成
+   コーデ生成メイン
    ===================================================== */
-async function generateCoord() {
+function generateCoord() {
   if (selectedStyles.size === 0) return;
-  if (allItems.length === 0) {
-    showToast('アイテムがありません。先に服を登録してください。');
+  if (allItems.length < 2) {
+    showToast('アイテムが少なすぎます。先に服を登録してください。');
     return;
   }
 
-  document.getElementById('generate-btn').disabled = true;
+  document.getElementById('coord-results').innerHTML = '';
   document.getElementById('generating').style.display = 'block';
-  document.getElementById('coord-results').innerHTML  = '';
+  document.getElementById('generate-btn').disabled    = true;
 
-  try {
-    var month  = new Date().getMonth() + 1;
-    var temp   = weatherData && weatherData.temp != null ? weatherData.temp
-               : weatherData && weatherData.tempMax != null ? weatherData.tempMax : 20;
-    var season = detectSeason(month, temp);
+  // 非同期に見せるため setTimeout で少し遅延
+  setTimeout(function() {
+    try {
+      var month  = new Date().getMonth() + 1;
+      var temp   = currentTemp();
+      var season = detectSeason(month, temp);
+      var styles = Array.from(selectedStyles);
 
-    var itemList = allItems.map(function(item) {
-      return {
-        id:         item.id,
-        name:       item.name        || '',
-        brand:      item.brand       || '',
-        category:   item.category    || '',
-        color:      item.color       || '',
-        culture:    item.culture     || '',
-        spring:     !!item.spring,
-        summer:     !!item.summer,
-        fall:       !!item.fall,
-        winter:     !!item.winter,
-        wear_count: item.wear_count  || 0,
-      };
-    });
+      // 系統スコアでフィルタリング
+      var scoredItems = scoreItems(allItems, styles, season);
 
-    var selectedStyleNames = Array.from(selectedStyles)
-      .map(function(id) {
-        var found = STYLES.find(function(s) { return s.id === id; });
-        return found ? found.name : id;
-      }).join('、');
+      var coords = [
+        buildRareCoord(scoredItems, season),
+        buildColorCoord(scoredItems, season),
+        buildSeasonCoord(scoredItems, season, temp),
+      ].filter(Boolean);
 
-    var prompt = buildPrompt(selectedStyleNames, season, temp, month, itemList);
-
-    // Vercel Serverless Function 経由で Anthropic API を呼ぶ（CORS回避）
-    var response = await fetch('/api/coord', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt }),
-    });
-
-    if (!response.ok) {
-      var errText = await response.text();
-      throw new Error('API error ' + response.status + ': ' + errText);
+      renderCoords(coords, season, temp);
+    } catch (e) {
+      console.error('generateCoord:', e);
+      document.getElementById('coord-results').innerHTML =
+        '<div class="coord-error">コーデの生成に失敗しました。<br>' + escHtml(e.message) + '</div>';
+    } finally {
+      document.getElementById('generating').style.display = 'none';
+      document.getElementById('generate-btn').disabled    = false;
     }
-
-    var data    = await response.json();
-    if (data.error) throw new Error(data.error);
-    var content = data.content || [];
-    var text    = '';
-    for (var i = 0; i < content.length; i++) {
-      if (content[i].type === 'text') { text = content[i].text; break; }
-    }
-
-    // JSON 配列を抽出
-    var jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('JSONが見つかりません。レスポンス:\n' + text.slice(0, 300));
-
-    var coords = JSON.parse(jsonMatch[0]);
-    renderCoords(coords);
-
-  } catch (e) {
-    console.error('generateCoord:', e);
-    document.getElementById('coord-results').innerHTML =
-      '<div class="coord-error">コーデの生成に失敗しました。<br>' + escHtml(e.message) + '</div>';
-  } finally {
-    document.getElementById('generating').style.display = 'none';
-    document.getElementById('generate-btn').disabled    = false;
-  }
+  }, 600);
 }
 
 /* =====================================================
-   プロンプト構築
-   テンプレートリテラルのネストを避けるため文字列結合で組み立てる
+   アイテムのスコアリング
+   選択した系統・季節に合うアイテムにスコアを付ける
    ===================================================== */
-function buildPrompt(styles, season, temp, month, itemList) {
-  var fence     = '```';
-  var itemJson  = JSON.stringify(itemList, null, 2);
-  var sLabel    = seasonLabel(season);
+function scoreItems(items, styles, season) {
+  return items.map(function(item) {
+    var score = 0;
 
-  return 'あなたはファッションコーディネーターです。\n'
-    + 'ユーザーの手持ちのアイテムから、今日のコーデを3パターン提案してください。\n\n'
-    + '## 条件\n'
-    + '- 希望する系統: ' + styles + '\n'
-    + '- 今日の気温: ' + temp + '℃（' + month + '月・' + sLabel + '）\n'
-    + '- ' + season + '=true のアイテムを優先してください\n\n'
-    + '## アイテム一覧（JSON）\n'
-    + fence + 'json\n'
-    + itemJson + '\n'
-    + fence + '\n\n'
-    + '## 出力ルール\n'
-    + '以下の3パターンを必ず含めてください:\n'
-    + '1. theme="rare"   : wear_countが少ないアイテムを中心にしたコーデ\n'
-    + '2. theme="color"  : 全体の色を3色以内に抑えたコーデ（colorフィールドを参照）\n'
-    + '3. theme="season" : 今日の気温・季節に最も適したコーデ\n\n'
-    + '各コーデはトップス1点・ボトムス1点・必要ならアウター1点（合計2〜4点）を選んでください。\n\n'
-    + '以下のJSON配列のみを出力してください（前置きや説明は不要）:\n\n'
-    + '[\n'
-    + '  {\n'
-    + '    "theme": "rare",\n'
-    + '    "title": "コーデのタイトル（10文字以内）",\n'
-    + '    "description": "コーデのポイント（80文字以内）",\n'
-    + '    "item_ids": ["id1", "id2", "id3"]\n'
-    + '  },\n'
-    + '  { "theme": "color",  "title": "...", "description": "...", "item_ids": [...] },\n'
-    + '  { "theme": "season", "title": "...", "description": "...", "item_ids": [...] }\n'
-    + ']\n\n'
-    + 'item_ids には上記アイテム一覧の id フィールドの値のみを使ってください。';
+    // 季節スコア（今の季節のフラグが true なら加点）
+    if (item[season]) score += 3;
+
+    // 系統スコア
+    var haystack = [
+      item.culture   || '',
+      item.category  || '',
+      item.fabric    || '',
+      item.brand     || '',
+      item.name      || '',
+    ].join(' ').toLowerCase();
+
+    styles.forEach(function(styleId) {
+      var keywords = STYLE_KEYWORDS[styleId] || [];
+      keywords.forEach(function(kw) {
+        if (haystack.indexOf(kw) !== -1) score += 2;
+      });
+    });
+
+    return Object.assign({}, item, { _score: score });
+  });
+}
+
+/* =====================================================
+   パターン① 着用少なめコーデ
+   wear_count が少ないアイテムを優先しつつ、
+   選択系統に合ったものを組み合わせる
+   ===================================================== */
+function buildRareCoord(items, season) {
+  // wear_count 昇順でソート（少ないものが先）、スコア降順を第2キー
+  var sorted = items.slice().sort(function(a, b) {
+    if (a.wear_count !== b.wear_count) return a.wear_count - b.wear_count;
+    return b._score - a._score;
+  });
+
+  var tops    = pickByRole(sorted, 'tops',    null);
+  var bottoms = pickByRole(sorted, 'bottoms', tops);
+  var outer   = pickByRole(sorted, 'outer',   tops || bottoms, true);
+
+  if (!tops || !bottoms) return null;
+
+  var selected = [tops, bottoms, outer].filter(Boolean);
+  var avgWorn  = Math.round(selected.reduce(function(s, i) { return s + i.wear_count; }, 0) / selected.length);
+
+  return {
+    theme:       'rare',
+    title:       '眠っている服を起こすコーデ',
+    description: '平均着用回数 ' + avgWorn + ' 回。出番が少なかったアイテムを主役に。',
+    items:       selected,
+  };
+}
+
+/* =====================================================
+   パターン② 3色コーデ
+   使われている色を色グループに分類し、
+   3グループ以内で収まる組み合わせを選ぶ
+   ===================================================== */
+function buildColorCoord(items, season) {
+  // スコア降順（系統一致度が高いものを優先）
+  var sorted = items.slice().sort(function(a, b) { return b._score - a._score; });
+
+  // 全組み合わせを試して3色以内のものを探す
+  var topCandidates    = filterByRole(sorted, 'tops');
+  var bottomCandidates = filterByRole(sorted, 'bottoms');
+  var outerCandidates  = filterByRole(sorted, 'outer');
+
+  var best = null;
+  var bestColorCount = 99;
+
+  // tops × bottoms の組み合わせを最大30パターン試す
+  var limit = Math.min(topCandidates.length, 6);
+  var blimit = Math.min(bottomCandidates.length, 5);
+
+  for (var t = 0; t < limit; t++) {
+    for (var b = 0; b < blimit; b++) {
+      var top    = topCandidates[t];
+      var bottom = bottomCandidates[b];
+      if (top.id === bottom.id) continue;
+
+      // アウターを加えてみる
+      var outerPick = null;
+      for (var o = 0; o < Math.min(outerCandidates.length, 4); o++) {
+        var candidate = outerCandidates[o];
+        if (candidate.id === top.id || candidate.id === bottom.id) continue;
+        var groups = getColorGroups([top, bottom, candidate]);
+        if (groups.size <= 3 && groups.size < bestColorCount) {
+          bestColorCount = groups.size;
+          outerPick = candidate;
+          best = [top, bottom, candidate];
+        }
+      }
+
+      // アウターなし
+      var groups2 = getColorGroups([top, bottom]);
+      if (groups2.size <= 3 && groups2.size < bestColorCount) {
+        bestColorCount = groups2.size;
+        best = [top, bottom];
+      }
+    }
+  }
+
+  if (!best) {
+    // 見つからなければ色数を気にせず2点で返す
+    var t0 = topCandidates[0];
+    var b0 = bottomCandidates[0];
+    if (!t0 || !b0) return null;
+    best = [t0, b0];
+    bestColorCount = getColorGroups([t0, b0]).size;
+  }
+
+  var colorNames = Array.from(getColorGroups(best)).join('・');
+
+  return {
+    theme:       'color',
+    title:       bestColorCount + '色でまとめたコーデ',
+    description: colorNames + ' の ' + bestColorCount + ' 色でシンプルにまとめたコーデ。統一感が出やすい。',
+    items:       best,
+  };
+}
+
+/* =====================================================
+   パターン③ 今日の気温コーデ
+   季節フラグが一致するアイテムを優先し、
+   スコア上位で組み合わせる
+   ===================================================== */
+function buildSeasonCoord(items, season, temp) {
+  // 今日の季節フラグが true のものを優先、次にスコア順
+  var sorted = items.slice().sort(function(a, b) {
+    var aMatch = a[season] ? 1 : 0;
+    var bMatch = b[season] ? 1 : 0;
+    if (bMatch !== aMatch) return bMatch - aMatch;
+    return b._score - a._score;
+  });
+
+  var tops    = pickByRole(sorted, 'tops',    null);
+  var bottoms = pickByRole(sorted, 'bottoms', tops);
+  var outer   = pickByRole(sorted, 'outer',   tops || bottoms, true);
+
+  if (!tops || !bottoms) return null;
+
+  var selected = [tops, bottoms, outer].filter(Boolean);
+
+  // 気温に応じたコメント
+  var tempComment = '';
+  if (temp <= 10)      tempComment = '寒い日なので重ね着が基本。';
+  else if (temp <= 16) tempComment = 'やや肌寒い。アウターがあると安心。';
+  else if (temp <= 23) tempComment = '快適な気温。軽めのレイヤードで。';
+  else if (temp <= 28) tempComment = '暖かい日。インナーを薄手に。';
+  else                 tempComment = '暑い日。通気性のある素材を選んで。';
+
+  return {
+    theme:       'season',
+    title:       seasonLabel(season) + 'の気温向けコーデ',
+    description: tempComment + ' 今日の ' + temp + '℃ に合わせて' + seasonLabel(season) + 'タグのアイテムで組みました。',
+    items:       selected,
+  };
+}
+
+/* =====================================================
+   ヘルパー: 役割別にアイテムを選ぶ
+   ===================================================== */
+function filterByRole(items, role) {
+  var cats = ROLE[role] || [];
+  return items.filter(function(item) {
+    return cats.indexOf(item.category) !== -1;
+  });
+}
+
+function pickByRole(items, role, exclude, optional) {
+  var candidates = filterByRole(items, role);
+  // exclude と同じアイテムは除外
+  if (exclude) {
+    candidates = candidates.filter(function(item) {
+      return item.id !== exclude.id;
+    });
+  }
+  if (!candidates.length) return optional ? null : null;
+  return candidates[0]; // スコア順で先頭
+}
+
+/* =====================================================
+   ヘルパー: 色グループを取得
+   ===================================================== */
+function getColorGroup(colorStr) {
+  if (!colorStr) return 'other';
+  var c = colorStr.toLowerCase();
+  var groups = Object.keys(COLOR_GROUPS);
+  for (var i = 0; i < groups.length; i++) {
+    var groupName = groups[i];
+    var keywords  = COLOR_GROUPS[groupName];
+    for (var j = 0; j < keywords.length; j++) {
+      if (c.indexOf(keywords[j]) !== -1) return groupName;
+    }
+  }
+  // マッチしない場合は色文字列そのものをグループ名に
+  return c.split(' ')[0] || 'other';
+}
+
+function getColorGroups(items) {
+  var groups = new Set();
+  items.forEach(function(item) {
+    if (item.color) groups.add(getColorGroup(item.color));
+  });
+  return groups;
 }
 
 /* =====================================================
    コーデ描画
    ===================================================== */
 var THEME_META = {
-  rare:   { label: '着用少なめ',     cls: 'rare'   },
-  color:  { label: '3色コーデ',      cls: 'color'  },
-  season: { label: '今日の気温向け',  cls: 'season' },
+  rare:   { label: '着用少なめ',    cls: 'rare'   },
+  color:  { label: '3色コーデ',     cls: 'color'  },
+  season: { label: '今日の気温向け', cls: 'season' },
 };
 
-function renderCoords(coords) {
+function renderCoords(coords, season, temp) {
   var wrap = document.getElementById('coord-results');
 
   if (!coords || !coords.length) {
-    wrap.innerHTML = '<div class="coord-error">コーデを生成できませんでした。再度お試しください。</div>';
+    wrap.innerHTML = '<div class="coord-error">アイテムが少なくコーデを生成できませんでした。<br>トップス・ボトムスのカテゴリを設定した服を登録してください。</div>';
     return;
   }
 
   wrap.innerHTML = coords.map(function(coord, i) {
-    var meta  = THEME_META[coord.theme] || { label: coord.theme, cls: 'style' };
-    var ids   = coord.item_ids || [];
-    var items = ids.map(function(id) {
-      return allItems.find(function(item) { return item.id === id; });
-    }).filter(Boolean);
+    var meta = THEME_META[coord.theme] || { label: coord.theme, cls: 'style' };
 
-    var itemsHtml = items.map(function(item) {
+    var itemsHtml = coord.items.map(function(item) {
       var photo = item.photo_url
         ? '<img src="' + escHtml(item.photo_url) + '" alt="' + escHtml(item.name) + '" loading="lazy" />'
         : '<div class="coord-item-photo-emoji">' + (item.emoji || '👕') + '</div>';
+
       return '<div class="coord-item">'
         + '<div class="coord-item-photo">' + photo + '</div>'
-        + '<div class="coord-item-name">'  + escHtml(item.name)             + '</div>'
-        + '<div class="coord-item-brand">' + escHtml(item.brand || '')      + '</div>'
-        + '<div class="coord-item-worn">'  + (item.wear_count || 0) + '回' + '</div>'
+        + '<div class="coord-item-name">'  + escHtml(item.name || '') + '</div>'
+        + '<div class="coord-item-brand">' + escHtml(item.brand || '') + '</div>'
+        + '<div class="coord-item-meta">'
+        +   escHtml(item.color || '') + (item.color && item.wear_count != null ? ' · ' : '')
+        +   (item.wear_count != null ? item.wear_count + '回' : '')
+        + '</div>'
         + '</div>';
     }).join('');
 
     return '<div class="coord-card" style="animation-delay:' + (i * 0.1) + 's">'
       + '<div class="coord-card-header">'
       + '<span class="coord-theme-badge ' + meta.cls + '">' + meta.label + '</span>'
-      + '<span class="coord-card-title">' + escHtml(coord.title || '') + '</span>'
+      + '<span class="coord-card-title">' + escHtml(coord.title) + '</span>'
       + '</div>'
       + '<div class="coord-items">' + itemsHtml + '</div>'
-      + '<div class="coord-description">' + escHtml(coord.description || '') + '</div>'
+      + '<div class="coord-description">' + escHtml(coord.description) + '</div>'
       + '</div>';
   }).join('');
 }
@@ -288,6 +441,26 @@ function renderCoords(coords) {
 /* =====================================================
    ユーティリティ
    ===================================================== */
+function currentTemp() {
+  if (!weatherData) return 20;
+  if (weatherData.temp   != null) return weatherData.temp;
+  if (weatherData.tempMax != null) return weatherData.tempMax;
+  return 20;
+}
+
+function detectSeason(month, temp) {
+  if (temp >= 25) return 'summer';
+  if (temp <= 10) return 'winter';
+  if (month >= 3 && month <= 6)  return 'spring';
+  if (month >= 9 && month <= 11) return 'fall';
+  if (month >= 7 && month <= 8)  return 'summer';
+  return 'winter';
+}
+
+function seasonLabel(s) {
+  return { spring: '春', summer: '夏', fall: '秋', winter: '冬' }[s] || s;
+}
+
 function escHtml(s) {
   if (!s) return '';
   return String(s).replace(/[&<>"']/g, function(c) {
