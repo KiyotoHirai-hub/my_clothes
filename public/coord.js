@@ -162,14 +162,11 @@ async function generateCoord() {
 
     var prompt = buildPrompt(selectedStyleNames, season, temp, month, itemList);
 
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Vercel Serverless Function 経由で Anthropic API を呼ぶ（CORS回避）
+    var response = await fetch('/api/coord', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model:      'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages:   [{ role: 'user', content: prompt }],
-      }),
+      body: JSON.stringify({ prompt: prompt }),
     });
 
     if (!response.ok) {
@@ -178,6 +175,7 @@ async function generateCoord() {
     }
 
     var data    = await response.json();
+    if (data.error) throw new Error(data.error);
     var content = data.content || [];
     var text    = '';
     for (var i = 0; i < content.length; i++) {
