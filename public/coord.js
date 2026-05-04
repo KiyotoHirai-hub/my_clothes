@@ -472,6 +472,7 @@ function ruleScore(combo, season, temp) {
       var hay = [item.name, item.fabric, item.category, item.culture, item.brand]
                   .filter(Boolean).join(' ').toLowerCase();
       if (/fleece|フリース|down|ダウン/.test(hay)) score -= 10;
+      if (/knit|ニット|wool|ウール/.test(hay)) score -= 10;
     });
   } else if (zone === 'mild_spring') {
     combo.forEach(function(item) {
