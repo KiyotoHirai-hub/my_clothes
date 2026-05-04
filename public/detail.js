@@ -10,7 +10,7 @@ const SEASON_META = {
 };
 
 const CATEGORY_LABEL = {
-  jacket:'ジャケット', outer:'アウター', parka:'パーカー',
+  tshirt:'Tシャツ', jacket:'ジャケット', outer:'アウター', parka:'パーカー',
   sweat:'スウェット', shirt:'シャツ', knit:'ニット',
   vest:'ベスト', pants:'パンツ', shoes:'シューズ',
   bag:'バッグ', accessory:'アクセサリー', other:'その他',

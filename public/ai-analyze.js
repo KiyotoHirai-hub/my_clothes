@@ -45,14 +45,16 @@ const COLORS = [
   ['pink',     ['a photo of pink clothing',    'a photo of a pink top or shirt']],
 ];
 
-// カテゴリ: Tシャツと正式なシャツを同じ "shirt" に分類（DBスキーマに合わせる）
 const CATEGORIES = [
+  ['tshirt',    [
+    'a plain casual t-shirt with round crew neck',
+    'a short sleeve t-shirt basic tee',
+    'a basic white or colored short sleeve tee',
+  ]],
   ['shirt',     [
-    'a plain casual t-shirt with round neck',
-    'a short sleeve t-shirt',
-    'a basic white or colored tee',
-    'a button-up dress shirt',
-    'a casual shirt',
+    'a button-up dress shirt with collar',
+    'a casual long sleeve shirt',
+    'a flannel or chambray shirt',
   ]],
   ['knit',      ['a knit sweater', 'a woolen pullover sweater', 'a cable knit top']],
   ['sweat',     ['a crewneck sweatshirt', 'a plain sweatshirt without hood']],

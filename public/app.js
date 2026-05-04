@@ -21,7 +21,7 @@ const SEASON_META = {
 };
 
 const CATEGORY_LABEL = {
-  jacket:'ジャケット', outer:'アウター', parka:'パーカー',
+  tshirt:'Tシャツ', jacket:'ジャケット', outer:'アウター', parka:'パーカー',
   sweat:'スウェット', shirt:'シャツ', knit:'ニット',
   vest:'ベスト', pants:'パンツ', shoes:'シューズ',
   bag:'バッグ', accessory:'アクセサリー', other:'その他',
@@ -482,9 +482,23 @@ async function runAIAnalysis(base64) {
   try {
     const result = await window.analyzeClothingPhoto(base64, setMsg);
 
-    // カテゴリ・色・素材・系統・季節を自動入力
+    // カテゴリ: 選択肢にない値が返された場合は動的に追加
+    if (result.category) {
+      const catSel = document.getElementById('inp-cat');
+      if (catSel) {
+        const exists = [...catSel.options].some(o => o.value === result.category);
+        if (!exists) {
+          const opt = document.createElement('option');
+          opt.value = result.category;
+          opt.textContent = CATEGORY_LABEL[result.category] || result.category;
+          catSel.insertBefore(opt, catSel.firstChild);
+        }
+        catSel.value = result.category;
+      }
+    }
+
+    // 色・素材・系統・季節を自動入力
     const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
-    set('inp-cat',     result.category);
     set('inp-color',   result.color);
     set('inp-fabric',  result.fabric);
     set('inp-culture', result.culture);
