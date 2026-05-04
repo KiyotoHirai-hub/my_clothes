@@ -465,6 +465,22 @@ function ruleScore(combo, season, temp) {
     if (hasOuter) score -= 10;
   }
 
+  // カテゴリに関わらず、フリース・ダウン素材は暑い春/夏に強くペナルティ
+  // （ベストなど ROLE_TOPS に入るアイテムも対象）
+  if (zone === 'warm_spring' || zone === 'summer') {
+    combo.forEach(function(item) {
+      var hay = [item.name, item.fabric, item.category, item.culture, item.brand]
+                  .filter(Boolean).join(' ').toLowerCase();
+      if (/fleece|フリース|down|ダウン/.test(hay)) score -= 10;
+    });
+  } else if (zone === 'mild_spring') {
+    combo.forEach(function(item) {
+      var hay = [item.name, item.fabric, item.category, item.culture, item.brand]
+                  .filter(Boolean).join(' ').toLowerCase();
+      if (/fleece|フリース|down|ダウン/.test(hay)) score -= 3;
+    });
+  }
+
   return score;
 }
 
