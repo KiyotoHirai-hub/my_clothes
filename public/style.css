@@ -424,6 +424,31 @@ header {
 .season-dot.fall   { background: var(--fall); }
 .season-dot.winter { background: var(--winter); }
 
+/* ── AI 自動入力バー ─────────────────────────────── */
+.ai-bar {
+  margin-top: 8px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg2);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.ai-bar--ok  { background: #edf7f0; color: #2a7d4a; }
+.ai-bar--err { background: #fdf3f3; color: var(--danger); }
+
+.ai-spin {
+  width: 13px; height: 13px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: spin 0.7s linear infinite;
+}
+
 .card-temp-warn {
   position: absolute;
   bottom: 6px;

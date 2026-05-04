@@ -342,6 +342,8 @@ function openAddModal() {
 
   modalPhotoB64 = null;
   resetPhotoArea('modal-photo-area', 'upload-icon', 'upload-text');
+  resetAIArea();
+  if (window.preloadAIModel) window.preloadAIModel();
 
   selEmoji = EMOJIS[0];
   renderEmojiGrid();
@@ -437,7 +439,66 @@ function previewPhoto(event) {
   readAndCompress(file, 800, 0.82, base64 => {
     modalPhotoB64 = base64;
     setPhotoPreview('modal-photo-area', 'upload-icon', 'upload-text', base64);
+    runAIAnalysis(base64);
   });
+}
+
+/* =====================================================
+   AI 自動入力
+   ===================================================== */
+
+function _setAIArea(html) {
+  const el = document.getElementById('ai-area');
+  if (!el) return;
+  el.style.display = '';
+  el.innerHTML = html;
+}
+
+function resetAIArea() {
+  const el = document.getElementById('ai-area');
+  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+}
+
+async function runAIAnalysis(base64) {
+  _setAIArea('<div class="ai-bar"><div class="ai-spin"></div><span id="ai-msg">AI解析を開始中…</span></div>');
+
+  const setMsg = msg => {
+    const el = document.getElementById('ai-msg');
+    if (el) el.textContent = msg;
+  };
+
+  // ai-analyze.js (module) がまだ読み込まれていない場合は最大 15 秒待つ
+  let waited = 0;
+  while (!window.analyzeClothingPhoto && waited < 30) {
+    await new Promise(r => setTimeout(r, 500));
+    waited++;
+  }
+
+  if (!window.analyzeClothingPhoto) {
+    _setAIArea('<div class="ai-bar ai-bar--err">⚠️ AI機能を読み込めませんでした</div>');
+    return;
+  }
+
+  try {
+    const result = await window.analyzeClothingPhoto(base64, setMsg);
+
+    // カテゴリ・色・素材・系統・季節を自動入力
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+    set('inp-cat',     result.category);
+    set('inp-color',   result.color);
+    set('inp-fabric',  result.fabric);
+    set('inp-culture', result.culture);
+
+    ['spring', 'summer', 'fall', 'winter'].forEach(s => {
+      const cb = document.querySelector(`input[name="inp-seasons"][value="${s}"]`);
+      if (cb) cb.checked = !!result[s];
+    });
+
+    _setAIArea('<div class="ai-bar ai-bar--ok">✅ AI自動入力完了（内容を確認してください）</div>');
+  } catch (e) {
+    console.error('[AI]', e);
+    _setAIArea('<div class="ai-bar ai-bar--err">⚠️ AI解析に失敗しました（手動で入力してください）</div>');
+  }
 }
 
 function resetPhotoArea(areaId, iconId, textId) {
