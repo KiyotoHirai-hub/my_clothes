@@ -66,9 +66,10 @@ function getTempZone(temp) {
 // 暑い春・夏に不向きな素材かどうか判定
 function isTooWarmForZone(item, zone) {
   if (!zone || (zone !== 'warm_spring' && zone !== 'summer')) return false;
+  if (item.summer) return false; // 夏タグあり = 夏も着れるので暑め表示しない
   const hay = [item.name, item.fabric, item.category, item.culture, item.brand]
     .filter(Boolean).join(' ').toLowerCase();
-  return /fleece|フリース|down|ダウン|knit|ニット|wool|ウール|corduroy|コーデュロイ|cord/.test(hay);
+  return /fleece|フリース|down|ダウン|knit|ニット|wool|ウール|corduroy|コーデュロイ|cord|quilting|キルティング|quilt/.test(hay);
 }
 
 async function loadWeather(lat, lon) {

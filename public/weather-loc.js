@@ -7,6 +7,7 @@ var PRESET_LOCATIONS = [
   { id: 'tokyo',   name: '東京',   lat: 35.69, lon: 139.69, icon: '🗼' },
   { id: 'osaka',   name: '大阪',   lat: 34.69, lon: 135.50, icon: '🏯' },
   { id: 'nagoya',  name: '名古屋', lat: 35.18, lon: 136.91, icon: '🏙️' },
+  { id: 'kanagawa',name: '神奈川', lat: 35.44, lon: 139.64, icon: '🌊' },
   { id: 'sapporo', name: '札幌',   lat: 43.06, lon: 141.35, icon: '❄️' },
   { id: 'fukuoka', name: '福岡',   lat: 33.59, lon: 130.40, icon: '🌸' },
   { id: 'sendai',  name: '仙台',   lat: 38.27, lon: 140.87, icon: '🌿' },

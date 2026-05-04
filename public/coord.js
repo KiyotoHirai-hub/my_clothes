@@ -468,6 +468,7 @@ function ruleScore(combo, season, temp) {
       if (/fleece|フリース|down|ダウン/.test(hay)) score -= 10;
       if (/knit|ニット|wool|ウール/.test(hay)) score -= 10;
       if (/corduroy|コーデュロイ|cord/.test(hay)) score -= 10;
+      if (/quilting|キルティング|quilt/.test(hay)) score -= 10;
     });
   } else if (zone === 'mild_spring') {
     combo.forEach(function(item) {
