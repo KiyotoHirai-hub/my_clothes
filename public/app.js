@@ -503,9 +503,12 @@ async function runAIAnalysis(base64) {
     set('inp-fabric',  result.fabric);
     set('inp-culture', result.culture);
 
+    const seasonResult = result.category === 'tshirt'
+      ? { spring: false, summer: true, fall: false, winter: false }
+      : result;
     ['spring', 'summer', 'fall', 'winter'].forEach(s => {
       const cb = document.querySelector(`input[name="inp-seasons"][value="${s}"]`);
-      if (cb) cb.checked = !!result[s];
+      if (cb) cb.checked = !!seasonResult[s];
     });
 
     _setAIArea('<div class="ai-bar ai-bar--ok">✅ AI自動入力完了（内容を確認してください）</div>');
