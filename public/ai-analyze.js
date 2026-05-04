@@ -26,48 +26,109 @@ async function _load(onStatus) {
 }
 
 /* ── ラベル定義 ─────────────────────────────────── */
+
+// 色: CLIP で判定（ピクセル解析は背景色に引きずられるため廃止）
+// "a photo of" を前置することで CLIP の精度が上がる
+const COLORS = [
+  ['white',    ['a photo of white clothing',   'a photo of a white t-shirt or shirt', 'white fabric garment']],
+  ['black',    ['a photo of black clothing',   'a photo of a black t-shirt or shirt', 'black fabric garment']],
+  ['gray',     ['a photo of gray clothing',    'a photo of a grey sweatshirt or sweater']],
+  ['navy',     ['a photo of navy blue clothing','a photo of a dark navy shirt']],
+  ['blue',     ['a photo of blue clothing',    'a photo of a light blue denim shirt']],
+  ['brown',    ['a photo of brown clothing',   'a photo of a tan brown jacket']],
+  ['beige',    ['a photo of beige clothing',   'a photo of a cream khaki garment']],
+  ['green',    ['a photo of green clothing',   'a photo of an olive green jacket']],
+  ['red',      ['a photo of red clothing',     'a photo of a red shirt or top']],
+  ['orange',   ['a photo of orange clothing',  'a photo of an orange top']],
+  ['yellow',   ['a photo of yellow clothing',  'a photo of a yellow or mustard top']],
+  ['purple',   ['a photo of purple clothing',  'a photo of a purple or violet top']],
+  ['pink',     ['a photo of pink clothing',    'a photo of a pink top or shirt']],
+];
+
+// カテゴリ: Tシャツと正式なシャツを同じ "shirt" に分類（DBスキーマに合わせる）
 const CATEGORIES = [
-  ['shirt',     ['a shirt', 't-shirt', 'button-up shirt', 'polo shirt']],
-  ['knit',      ['a knit sweater', 'woolen pullover', 'knitwear']],
-  ['sweat',     ['a sweatshirt', 'crewneck sweatshirt']],
-  ['parka',     ['a hoodie', 'zip-up hoodie', 'parka jacket']],
-  ['jacket',    ['a denim jacket', 'blazer jacket', 'varsity jacket', 'blouson']],
-  ['outer',     ['a long coat', 'overcoat', 'trench coat', 'down jacket']],
-  ['vest',      ['a vest', 'gilet', 'sleeveless jacket']],
-  ['pants',     ['pants', 'jeans', 'trousers', 'chinos', 'shorts']],
-  ['shoes',     ['shoes', 'sneakers', 'boots', 'sandals']],
-  ['bag',       ['a bag', 'backpack', 'tote bag']],
-  ['accessory', ['a hat', 'cap', 'belt', 'watch', 'scarf', 'sunglasses']],
+  ['shirt',     [
+    'a plain casual t-shirt with round neck',
+    'a short sleeve t-shirt',
+    'a basic white or colored tee',
+    'a button-up dress shirt',
+    'a casual shirt',
+  ]],
+  ['knit',      ['a knit sweater', 'a woolen pullover sweater', 'a cable knit top']],
+  ['sweat',     ['a crewneck sweatshirt', 'a plain sweatshirt without hood']],
+  ['parka',     ['a hoodie with hood', 'a zip-up hoodie', 'a pullover hoodie parka']],
+  ['jacket',    ['a denim jacket', 'a varsity jacket', 'a blouson jacket', 'a short jacket']],
+  ['outer',     ['a long trench coat', 'a wool overcoat', 'a down jacket coat']],
+  ['vest',      ['a vest gilet without sleeves', 'a padded vest sleeveless jacket']],
+  ['pants',     ['pants jeans trousers', 'denim jeans', 'chino pants', 'shorts']],
+  ['shoes',     ['shoes sneakers boots', 'leather shoes loafers', 'athletic sneakers']],
+  ['bag',       ['a bag backpack tote', 'a shoulder bag', 'a briefcase bag']],
+  ['accessory', ['a hat cap or headwear', 'a scarf or belt', 'sunglasses or watch']],
 ];
 
+// 素材: より具体的な素材表現
 const FABRICS = [
-  ['denim',    ['denim fabric', 'jeans material']],
-  ['cotton',   ['cotton jersey fabric']],
-  ['wool',     ['wool fabric', 'woolen knit']],
-  ['leather',  ['leather material', 'suede material']],
-  ['nylon',    ['nylon fabric', 'polyester shell', 'technical fabric']],
-  ['fleece',   ['fleece fabric', 'polar fleece']],
-  ['corduroy', ['corduroy fabric', 'ribbed velvet fabric']],
-  ['down',     ['quilted down fabric', 'padded quilted material']],
+  ['denim',    ['denim fabric jeans material', 'a photo of denim clothing']],
+  ['cotton',   ['smooth cotton jersey fabric', 'plain cotton t-shirt fabric']],
+  ['wool',     ['wool fabric or woolen material', 'a woolen knitted texture']],
+  ['leather',  ['leather or suede material', 'genuine leather jacket surface']],
+  ['nylon',    ['nylon or polyester technical fabric', 'waterproof shell nylon fabric']],
+  ['fleece',   ['soft fleece fabric', 'polar fleece fuzzy texture']],
+  ['corduroy', ['corduroy ribbed fabric', 'corduroy texture with vertical ridges']],
+  ['down',     ['quilted down padding', 'padded quilted jacket surface']],
 ];
 
+// 系統: vintage の誤検出を減らすため、シンプルな服との境界を明確化
 const CULTURES = [
-  ['american casual', ['american workwear style', 'american casual military surplus']],
-  ['outdoor',         ['outdoor mountain sports clothing', 'hiking technical gear']],
-  ['street',          ['streetwear skateboard style', 'urban street fashion']],
-  ['euro casual',     ['european minimal clean style', 'simple european fashion']],
-  ['work smart',      ['smart casual office style', 'business casual clothing']],
-  ['vintage',         ['vintage retro used clothing', 'thrift store vintage fashion']],
+  ['american casual', [
+    'american workwear denim military surplus casual style',
+    'american casual flannel shirt jeans work boots style',
+  ]],
+  ['outdoor', [
+    'outdoor technical mountain hiking sports gear',
+    'outdoor functional jacket with many pockets',
+  ]],
+  ['street', [
+    'urban streetwear hip-hop sneaker skateboard style',
+    'graphic logo streetwear oversized clothing style',
+  ]],
+  ['euro casual', [
+    'minimalist clean european basic white t-shirt simple style',
+    'simple plain well-fitted european casual minimal fashion',
+    'clean basic everyday casual t-shirt minimalist look',
+  ]],
+  ['work smart', [
+    'smart business casual office professional style',
+    'tailored formal office shirt suit style',
+  ]],
+  ['vintage', [
+    'worn faded distressed thrift store secondhand clothing',
+    'retro 1980s 1990s colorful pattern graphic vintage style',
+    'old used patchwork or heavily worn vintage fashion',
+  ]],
 ];
 
+// 季節: 体感気温ベースで判定
 const SEASON_GROUPS = [
-  ['winter', ['heavy winter coat or thick jacket for very cold freezing weather']],
-  ['fall',   ['autumn fall jacket or light coat for cool chilly weather']],
-  ['spring', ['light spring layer jacket or shirt for mild pleasant weather']],
-  ['summer', ['thin breathable t-shirt or shorts for hot summer weather']],
+  ['winter', [
+    'a very thick heavy down coat for freezing cold winter',
+    'a heavy wool overcoat for extreme cold weather',
+  ]],
+  ['fall', [
+    'a medium weight jacket or coat for cool autumn weather',
+    'a light to medium layer for chilly fall weather',
+  ]],
+  ['spring', [
+    'a light layer shirt jacket for mild spring weather',
+    'a light cardigan or thin jacket for pleasant weather',
+  ]],
+  ['summer', [
+    'a thin breathable t-shirt for hot summer weather',
+    'a short sleeve light garment for warm summer days',
+  ]],
 ];
 
-/* ── CLIP 分類 ──────────────────────────────────── */
+/* ── CLIP 分類（共通） ──────────────────────────── */
 async function _classify(imageUrl, groups) {
   const allLabels = groups.flatMap(([, prompts]) => prompts);
   const results   = await _pipe(imageUrl, allLabels);
@@ -81,63 +142,6 @@ async function _classify(imageUrl, groups) {
     .sort((a, b) => b.score - a.score);
 }
 
-/* ── 支配色をピクセル解析で検出 ────────────────── */
-function _detectColor(imageDataUrl) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 64; canvas.height = 64;
-      const ctx = canvas.getContext('2d');
-      // 中央 60% の領域だけ使う（背景を除外）
-      const sx = img.width  * 0.2, sy = img.height * 0.1;
-      const sw = img.width  * 0.6, sh = img.height * 0.8;
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 64, 64);
-      const d = ctx.getImageData(0, 0, 64, 64).data;
-      const counts = {};
-      for (let i = 0; i < d.length; i += 4) {
-        const name = _rgb2name(d[i], d[i+1], d[i+2]);
-        counts[name] = (counts[name] || 0) + 1;
-      }
-      const top = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-      resolve(top[0]?.[0] || 'black');
-    };
-    img.onerror = () => resolve('black');
-    img.src = imageDataUrl;
-  });
-}
-
-function _rgb2name(r, g, b) {
-  const rn = r/255, gn = g/255, bn = b/255;
-  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
-  const l = (max + min) / 2;
-  const d = max - min;
-
-  if (d < 0.08) {
-    if (l > 0.80) return 'white';
-    if (l < 0.20) return 'black';
-    return 'gray';
-  }
-  const s = d / (l > 0.5 ? 2 - max - min : max + min);
-  let h;
-  if (max === rn)      h = ((gn - bn) / d + 6) % 6 * 60;
-  else if (max === gn) h = ((bn - rn) / d + 2) * 60;
-  else                 h = ((rn - gn) / d + 4) * 60;
-
-  if (l < 0.22)            return 'black';
-  if (l > 0.85 && s < 0.2) return 'white';
-  if (s < 0.14)            return 'gray';
-
-  if (h < 25 || h >= 345) return l < 0.38 ? 'burgundy' : 'red';
-  if (h < 45)  return 'orange';
-  if (h < 70)  return 'yellow';
-  if (h < 155) return l < 0.32 ? 'olive' : 'green';
-  if (h < 195) return 'teal';
-  if (h < 255) return l < 0.35 ? 'navy' : 'blue';
-  if (h < 290) return 'purple';
-  return 'pink';
-}
-
 /* ── メイン解析 ─────────────────────────────────── */
 async function analyzeClothingPhoto(imageDataUrl, onStatus) {
   const s = onStatus || (() => {});
@@ -145,8 +149,8 @@ async function analyzeClothingPhoto(imageDataUrl, onStatus) {
   s('AIモデルを準備中…');
   await _load(onStatus);
 
-  s('色を検出中…');
-  const color = await _detectColor(imageDataUrl);
+  s('色を判定中…');
+  const colorResults = await _classify(imageDataUrl, COLORS);
 
   s('カテゴリを判定中…');
   const cats = await _classify(imageDataUrl, CATEGORIES);
@@ -167,7 +171,7 @@ async function analyzeClothingPhoto(imageDataUrl, onStatus) {
 
   return {
     category: cats[0].val,
-    color,
+    color:    colorResults[0].val,
     fabric:   fabrics[0].val,
     culture:  cultures[0].val,
     spring:   top2.has('spring'),
@@ -179,6 +183,4 @@ async function analyzeClothingPhoto(imageDataUrl, onStatus) {
 
 /* ── グローバル公開 ─────────────────────────────── */
 window.analyzeClothingPhoto = analyzeClothingPhoto;
-
-// モーダルが開いたとき等に事前ロードできるよう公開
 window.preloadAIModel = () => _load(() => {}).catch(() => {});
