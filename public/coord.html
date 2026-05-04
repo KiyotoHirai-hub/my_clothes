@@ -217,6 +217,36 @@
       border-top: 1px dashed var(--border);
     }
 
+    /* カルーセルナビゲーション */
+    .coord-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 8px 16px 12px;
+      border-top: 1px solid var(--border);
+    }
+    .coord-nav-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 34px; height: 34px;
+      font-size: 20px; line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text);
+      transition: background 0.15s;
+      padding: 0;
+    }
+    .coord-nav-btn:hover:not(:disabled) { background: var(--bg2); }
+    .coord-nav-btn:disabled { opacity: 0.25; cursor: default; }
+    .coord-nav-indicator {
+      font-size: 12px;
+      color: var(--text-muted);
+      min-width: 44px;
+      text-align: center;
+    }
+
     /* エラー */
     .coord-error {
       background: #fdf5f4;

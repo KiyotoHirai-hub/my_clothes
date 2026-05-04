@@ -173,13 +173,14 @@ function generateCoord() {
       // アイテムに系統・季節スコアを付与
       var scored = scoreItems(allItems, styles, season);
 
-      var results = [
-        buildRareCoord(scored, season, temp),
-        buildColorCoord(scored, season, temp),
-        buildSeasonCoord(scored, season, temp),
-      ].filter(Boolean);
+      coordCarousels = {};
+      var builders = { rare: buildRareCoords, color: buildColorCoords, season: buildSeasonCoords };
+      ['rare', 'color', 'season'].forEach(function(theme) {
+        var coords = builders[theme](scored, season, temp);
+        if (coords.length) coordCarousels[theme] = { coords: coords, index: 0 };
+      });
 
-      renderCoords(results);
+      renderAllCarousels();
     } catch (e) {
       console.error(e);
       document.getElementById('coord-results').innerHTML =
@@ -212,111 +213,87 @@ function scoreItems(items, styles, season) {
 }
 
 /* ===================================================
-   パターン① rare: 着用少なめ優先
+   パターン① rare: 着用少なめ優先（複数件）
    =================================================== */
-function buildRareCoord(items, season, temp) {
-  // wear_count 昇順 → score 降順
+function buildRareCoords(items, season, temp) {
   var sorted = items.slice().sort(function(a, b) {
     if (a.wear_count !== b.wear_count) return a.wear_count - b.wear_count;
     return b._score - a._score;
   });
-
-  var combo = findBestCombo(sorted, season, temp, 'rare');
-  if (!combo) return null;
-
-  var avgWorn = Math.round(
-    combo.reduce(function(s, i) { return s + (i.wear_count || 0); }, 0) / combo.length
-  );
-
-  return {
-    theme:       'rare',
-    title:       '眠っている服を起こすコーデ',
-    description: '平均着用 ' + avgWorn + ' 回。出番が少なかったアイテムを組み合わせました。',
-    items:       combo,
-    rules:       describeRules(combo, season, temp),
-  };
+  return findTopCombos(sorted, season, temp, 'rare', 8).map(function(combo) {
+    var avgWorn = Math.round(
+      combo.reduce(function(s, i) { return s + (i.wear_count || 0); }, 0) / combo.length
+    );
+    return {
+      theme:       'rare',
+      title:       '眠っている服を起こすコーデ',
+      description: '平均着用 ' + avgWorn + ' 回。出番が少なかったアイテムを組み合わせました。',
+      items:       combo,
+      rules:       describeRules(combo, season, temp),
+    };
+  });
 }
 
 /* ===================================================
-   パターン② color: ルール最優先の「完璧な3色コーデ」
+   パターン② color: ルール最優先（複数件）
    =================================================== */
-function buildColorCoord(items, season, temp) {
-  // score 降順（系統・季節一致が高いものを優先）
+function buildColorCoords(items, season, temp) {
   var sorted = items.slice().sort(function(a, b) { return b._score - a._score; });
-
-  var combo = findBestCombo(sorted, season, temp, 'color');
-  if (!combo) return null;
-
-  var groups = getColorGroups(combo);
-  var colorStr = Array.from(groups).join(' · ');
-
-  return {
-    theme:       'color',
-    title:       groups.size + '色でまとめたコーデ',
-    description: colorStr + ' の ' + groups.size + ' 色構成。ルールに最も忠実なコーデです。',
-    items:       combo,
-    rules:       describeRules(combo, season, temp),
-  };
+  return findTopCombos(sorted, season, temp, 'color', 8).map(function(combo) {
+    var groups   = getColorGroups(combo);
+    var colorStr = Array.from(groups).join(' · ');
+    return {
+      theme:       'color',
+      title:       groups.size + '色でまとめたコーデ',
+      description: colorStr + ' の ' + groups.size + ' 色構成。ルールに最も忠実なコーデです。',
+      items:       combo,
+      rules:       describeRules(combo, season, temp),
+    };
+  });
 }
 
 /* ===================================================
-   パターン③ season: 季節・気温最優先
+   パターン③ season: 季節・気温最優先（複数件）
    =================================================== */
-function buildSeasonCoord(items, season, temp) {
-  // 季節一致 → score 降順
+function buildSeasonCoords(items, season, temp) {
   var sorted = items.slice().sort(function(a, b) {
     var am = a[season] ? 1 : 0;
     var bm = b[season] ? 1 : 0;
     if (bm !== am) return bm - am;
     return b._score - a._score;
   });
-
-  var combo = findBestCombo(sorted, season, temp, 'season');
-  if (!combo) return null;
-
+  var zone       = getTempZone(temp);
+  var zoneLabel  = getTempZoneLabel(zone);
   var tempComment = getTempComment(temp);
-  var zone = getTempZone(temp);
-
-  return {
-    theme:       'season',
-    title:       getTempZoneLabel(zone) + 'のコーデ',
-    description: tempComment + ' 季節タグが一致するアイテムで組みました。',
-    items:       combo,
-    rules:       describeRules(combo, season, temp),
-  };
+  return findTopCombos(sorted, season, temp, 'season', 8).map(function(combo) {
+    return {
+      theme:       'season',
+      title:       zoneLabel + 'のコーデ',
+      description: tempComment + ' 季節タグが一致するアイテムで組みました。',
+      items:       combo,
+      rules:       describeRules(combo, season, temp),
+    };
+  });
 }
 
 /* ===================================================
-   コンボ探索
-   候補リストからルールを満たす最良の組み合わせを探す
-
-   「最良」= ルールスコアが最も高いもの
-   ルールスコア:
-     +10 色3色以内
-     +5  派手色1色以内
-     +5  派手柄1つ以内
-     +8  ベース色（黒/白/緑/茶）が含まれる
-     +4  素材バリエーションあり
-     +3  季節フラグ一致アイテムが過半数
+   コンボ探索（上位 maxCount 件を返す）
    =================================================== */
-function findBestCombo(sorted, season, temp, mode) {
+function findTopCombos(sorted, season, temp, mode, maxCount) {
   var tops    = sorted.filter(function(i) { return ROLE_TOPS.indexOf(i.category)    !== -1; });
   var bottoms = sorted.filter(function(i) { return ROLE_BOTTOMS.indexOf(i.category) !== -1; });
   var outers  = sorted.filter(function(i) { return ROLE_OUTER.indexOf(i.category)   !== -1; });
 
-  if (!tops.length || !bottoms.length) return null;
+  if (!tops.length || !bottoms.length) return [];
 
-  // 気温ゾーンでアウターの必要性を判定
   var zone = getTempZone(temp);
   var outerRequired = zone === 'cold_winter' || zone === 'cold_spring';
   var outerOptional = zone === 'mild_spring';
-  // warm_spring / summer はアウターなし
 
-  // ゾーンに合ったアウターの重さ優先順にソート
   var weightPriority = {
     cold_winter: { heavy: 0, fleece: 1, light: 2, thin: 3 },
-    cold_spring: { light: 0, fleece: 1, thin: 2, heavy: 3 }, // フリースは寒い春でOK
-    mild_spring: { thin: 0, light: 1, fleece: 2, heavy: 3 }, // フリースは少し暑め
+    cold_spring: { light: 0, fleece: 1, thin: 2, heavy: 3 },
+    mild_spring: { thin: 0, light: 1, fleece: 2, heavy: 3 },
   };
   if (weightPriority[zone]) {
     var order = weightPriority[zone];
@@ -327,13 +304,10 @@ function findBestCombo(sorted, season, temp, mode) {
     });
   }
 
-  var bestCombo = null;
-  var bestRuleScore = -Infinity;
-
-  // tops × bottoms（最大5×5）、アウターあり/なし を探索
-  var tLimit = Math.min(tops.length, 5);
-  var bLimit = Math.min(bottoms.length, 5);
-  var oLimit = Math.min(outers.length, 4);
+  var allCombos = [];
+  var tLimit = Math.min(tops.length, 8);
+  var bLimit = Math.min(bottoms.length, 8);
+  var oLimit = Math.min(outers.length, 6);
 
   for (var t = 0; t < tLimit; t++) {
     for (var b = 0; b < bLimit; b++) {
@@ -341,15 +315,13 @@ function findBestCombo(sorted, season, temp, mode) {
       var bottom = bottoms[b];
       if (top.id === bottom.id) continue;
 
-      // アウターなしで試す
       if (!outerRequired) {
         var combo2 = [top, bottom];
         var rs2    = ruleScore(combo2, season, temp);
         if (mode === 'rare') rs2 += rareBonus(combo2);
-        if (rs2 > bestRuleScore) { bestRuleScore = rs2; bestCombo = combo2; }
+        allCombos.push({ items: combo2, score: rs2 });
       }
 
-      // アウターありで試す
       if ((outerRequired || outerOptional) && outers.length) {
         for (var o = 0; o < oLimit; o++) {
           var outer = outers[o];
@@ -358,13 +330,25 @@ function findBestCombo(sorted, season, temp, mode) {
           var rs3    = ruleScore(combo3, season, temp);
           if (mode === 'rare') rs3 += rareBonus(combo3);
           if (outerRequired) rs3 += 3;
-          if (rs3 > bestRuleScore) { bestRuleScore = rs3; bestCombo = combo3; }
+          allCombos.push({ items: combo3, score: rs3 });
         }
       }
     }
   }
 
-  return bestCombo;
+  allCombos.sort(function(a, b) { return b.score - a.score; });
+
+  // 重複なし（同一アイテムセット）で上位 maxCount 件を取得
+  var results  = [];
+  var usedKeys = {};
+  for (var i = 0; i < allCombos.length && results.length < maxCount; i++) {
+    var key = allCombos[i].items.map(function(item) { return item.id; }).sort().join('_');
+    if (!usedKeys[key]) {
+      usedKeys[key] = true;
+      results.push(allCombos[i].items);
+    }
+  }
+  return results;
 }
 
 /* ===================================================
@@ -524,18 +508,21 @@ function describeRules(combo, season, temp) {
 }
 
 /* ===================================================
-   描画
+   カルーセル状態・描画
    =================================================== */
+var coordCarousels = {};
+
 var THEME_META = {
   rare:   { label: '着用少なめ',    cls: 'rare'   },
   color:  { label: '3色コーデ',     cls: 'color'  },
   season: { label: '今日の気温向け', cls: 'season' },
 };
 
-function renderCoords(coords) {
-  var wrap = document.getElementById('coord-results');
+function renderAllCarousels() {
+  var wrap   = document.getElementById('coord-results');
+  var themes = ['rare', 'color', 'season'].filter(function(t) { return coordCarousels[t]; });
 
-  if (!coords.length) {
+  if (!themes.length) {
     wrap.innerHTML = '<div class="coord-error">'
       + 'コーデを生成できませんでした。<br>'
       + 'トップス・ボトムスのカテゴリを設定した服を登録してください。'
@@ -543,35 +530,66 @@ function renderCoords(coords) {
     return;
   }
 
-  wrap.innerHTML = coords.map(function(coord, i) {
-    var meta = THEME_META[coord.theme] || { label: coord.theme, cls: 'style' };
+  wrap.innerHTML = themes.map(function(theme, i) {
+    return renderCarouselCard(theme, coordCarousels[theme], i);
+  }).join('');
+}
 
-    var itemsHtml = coord.items.map(function(item) {
-      var photo = item.photo_url
-        ? '<img src="' + escHtml(item.photo_url) + '" alt="' + escHtml(item.name) + '" loading="lazy" />'
-        : '<div class="coord-item-photo-emoji">' + (item.emoji || '👕') + '</div>';
-      return '<div class="coord-item">'
-        + '<div class="coord-item-photo">' + photo + '</div>'
-        + '<div class="coord-item-name">'  + escHtml(item.name  || '') + '</div>'
-        + '<div class="coord-item-brand">' + escHtml(item.brand || '') + '</div>'
-        + '<div class="coord-item-meta">'
-        + escHtml(item.color || '')
-        + (item.color && item.wear_count != null ? ' · ' : '')
-        + (item.wear_count != null ? item.wear_count + '回' : '')
-        + '</div>'
-        + '</div>';
-    }).join('');
-
-    return '<div class="coord-card" style="animation-delay:' + (i * 0.1) + 's">'
-      + '<div class="coord-card-header">'
-      + '<span class="coord-theme-badge ' + meta.cls + '">' + meta.label + '</span>'
-      + '<span class="coord-card-title">' + escHtml(coord.title) + '</span>'
+function buildItemsHtml(items) {
+  return items.map(function(item) {
+    var photo = item.photo_url
+      ? '<img src="' + escHtml(item.photo_url) + '" alt="' + escHtml(item.name) + '" loading="lazy" />'
+      : '<div class="coord-item-photo-emoji">' + (item.emoji || '👕') + '</div>';
+    return '<div class="coord-item">'
+      + '<div class="coord-item-photo">' + photo + '</div>'
+      + '<div class="coord-item-name">'  + escHtml(item.name  || '') + '</div>'
+      + '<div class="coord-item-brand">' + escHtml(item.brand || '') + '</div>'
+      + '<div class="coord-item-meta">'
+      + escHtml(item.color || '')
+      + (item.color && item.wear_count != null ? ' · ' : '')
+      + (item.wear_count != null ? item.wear_count + '回' : '')
       + '</div>'
-      + '<div class="coord-items">' + itemsHtml + '</div>'
-      + '<div class="coord-description">' + escHtml(coord.description) + '</div>'
-      + '<div class="coord-rules">' + escHtml(coord.rules || '') + '</div>'
       + '</div>';
   }).join('');
+}
+
+function renderCarouselCard(theme, carousel, animIndex) {
+  var coord = carousel.coords[carousel.index];
+  var total = carousel.coords.length;
+  var idx   = carousel.index;
+  var meta  = THEME_META[theme] || { label: theme, cls: 'style' };
+
+  var navHtml = total > 1
+    ? '<div class="coord-nav">'
+      + '<button class="coord-nav-btn" onclick="navigateCoord(\'' + theme + '\',-1)"'
+      + (idx === 0 ? ' disabled' : '') + '>&#8249;</button>'
+      + '<span class="coord-nav-indicator">' + (idx + 1) + ' / ' + total + '</span>'
+      + '<button class="coord-nav-btn" onclick="navigateCoord(\'' + theme + '\',1)"'
+      + (idx === total - 1 ? ' disabled' : '') + '>&#8250;</button>'
+      + '</div>'
+    : '';
+
+  return '<div class="coord-card" id="card-' + theme + '" style="animation-delay:' + ((animIndex || 0) * 0.1) + 's">'
+    + '<div class="coord-card-header">'
+    + '<span class="coord-theme-badge ' + meta.cls + '">' + meta.label + '</span>'
+    + '<span class="coord-card-title">' + escHtml(coord.title) + '</span>'
+    + '</div>'
+    + '<div class="coord-items">' + buildItemsHtml(coord.items) + '</div>'
+    + '<div class="coord-description">' + escHtml(coord.description) + '</div>'
+    + '<div class="coord-rules">' + escHtml(coord.rules || '') + '</div>'
+    + navHtml
+    + '</div>';
+}
+
+function navigateCoord(theme, direction) {
+  var carousel = coordCarousels[theme];
+  if (!carousel) return;
+  carousel.index = Math.max(0, Math.min(carousel.coords.length - 1, carousel.index + direction));
+  var card = document.getElementById('card-' + theme);
+  if (!card) return;
+  var tmp = document.createElement('div');
+  tmp.innerHTML = renderCarouselCard(theme, carousel, 0);
+  card.parentNode.replaceChild(tmp.firstChild, card);
 }
 
 /* ===================================================
