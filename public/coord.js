@@ -115,9 +115,9 @@ async function loadWeatherData() {
       : (weatherData.temp != null ? weatherData.temp + '℃' : '—');
     document.getElementById('ws-temp').textContent =
       (weatherData.emoji || '🌡️') + '  ' + tempStr + '  ' + (weatherData.weather || '');
-    var season = detectSeason(new Date().getMonth() + 1, currentTemp());
+    var zone = getTempZone(currentTemp());
     document.getElementById('ws-desc').textContent =
-      (weatherData.date || '') + ' · ' + seasonLabel(season) + 'の気温帯';
+      (weatherData.date || '') + ' · ' + getTempZoneLabel(zone);
   } catch (e) {
     document.getElementById('ws-temp').textContent = '天気を取得できませんでした';
   }
@@ -275,10 +275,11 @@ function buildSeasonCoord(items, season, temp) {
   if (!combo) return null;
 
   var tempComment = getTempComment(temp);
+  var zone = getTempZone(temp);
 
   return {
     theme:       'season',
-    title:       seasonLabel(season) + 'の気温向けコーデ',
+    title:       getTempZoneLabel(zone) + 'のコーデ',
     description: tempComment + ' 季節タグが一致するアイテムで組みました。',
     items:       combo,
     rules:       describeRules(combo, season, temp),
@@ -305,9 +306,26 @@ function findBestCombo(sorted, season, temp, mode) {
 
   if (!tops.length || !bottoms.length) return null;
 
-  // 気温でアウターが必要か判定
-  var outerRequired = temp <= 16;
-  var outerOptional = temp <= 23;
+  // 気温ゾーンでアウターの必要性を判定
+  var zone = getTempZone(temp);
+  var outerRequired = zone === 'cold_winter' || zone === 'cold_spring';
+  var outerOptional = zone === 'mild_spring';
+  // warm_spring / summer はアウターなし
+
+  // ゾーンに合ったアウターの重さ優先順にソート
+  var weightPriority = {
+    cold_winter: { heavy: 0, light: 1, thin: 2 },
+    cold_spring: { light: 0, thin: 1, heavy: 2 },
+    mild_spring: { thin: 0, light: 1, heavy: 2 },
+  };
+  if (weightPriority[zone]) {
+    var order = weightPriority[zone];
+    outers = outers.slice().sort(function(a, b) {
+      var wa = order[getOuterWeight(a)]; if (wa == null) wa = 3;
+      var wb = order[getOuterWeight(b)]; if (wb == null) wb = 3;
+      return wa - wb;
+    });
+  }
 
   var bestCombo = null;
   var bestRuleScore = -Infinity;
@@ -326,21 +344,19 @@ function findBestCombo(sorted, season, temp, mode) {
       // アウターなしで試す
       if (!outerRequired) {
         var combo2 = [top, bottom];
-        var rs2    = ruleScore(combo2, season);
-        // rare モードは wear_count ボーナスを加算
+        var rs2    = ruleScore(combo2, season, temp);
         if (mode === 'rare') rs2 += rareBonus(combo2);
         if (rs2 > bestRuleScore) { bestRuleScore = rs2; bestCombo = combo2; }
       }
 
       // アウターありで試す
-      if (outerOptional && outers.length) {
+      if ((outerRequired || outerOptional) && outers.length) {
         for (var o = 0; o < oLimit; o++) {
           var outer = outers[o];
           if (outer.id === top.id || outer.id === bottom.id) continue;
           var combo3 = [top, bottom, outer];
-          var rs3    = ruleScore(combo3, season);
+          var rs3    = ruleScore(combo3, season, temp);
           if (mode === 'rare') rs3 += rareBonus(combo3);
-          // アウター必須時はボーナス
           if (outerRequired) rs3 += 3;
           if (rs3 > bestRuleScore) { bestRuleScore = rs3; bestCombo = combo3; }
         }
@@ -354,7 +370,7 @@ function findBestCombo(sorted, season, temp, mode) {
 /* ===================================================
    ルールスコア計算
    =================================================== */
-function ruleScore(combo, season) {
+function ruleScore(combo, season, temp) {
   var score = 0;
 
   // R1: 色は3色以内
@@ -402,7 +418,45 @@ function ruleScore(combo, season) {
     var fg = getFabricGroup(item.fabric);
     if (specialFabrics.indexOf(fg) !== -1) specialCount++;
   });
-  if (specialCount === 1) score += 3; // 1種だけ特殊素材が入るのが理想
+  if (specialCount === 1) score += 3;
+
+  // R6: 気温ゾーンに合ったアウター選択
+  var zone = getTempZone(temp != null ? temp : 20);
+  var outerItems = combo.filter(function(i) { return ROLE_OUTER.indexOf(i.category) !== -1; });
+  var hasOuter = outerItems.length > 0;
+
+  if (zone === 'cold_winter') {
+    // コート・ダウン必須
+    if (hasOuter) {
+      score += 8;
+      if (outerItems.some(function(i) { return getOuterWeight(i) === 'heavy'; })) score += 5;
+    } else {
+      score -= 10;
+    }
+  } else if (zone === 'cold_spring') {
+    // ライトアウター推奨
+    if (hasOuter) {
+      score += 8;
+      if (outerItems.some(function(i) { return getOuterWeight(i) === 'light'; })) score += 5;
+    } else {
+      score -= 8;
+    }
+  } else if (zone === 'mild_spring') {
+    // 薄手羽織りは加点、重いアウターは減点
+    if (hasOuter) {
+      if (outerItems.some(function(i) { return getOuterWeight(i) === 'thin'; })) score += 4;
+      else if (outerItems.some(function(i) { return getOuterWeight(i) === 'light'; })) score += 2;
+      else score -= 3;
+    }
+  } else if (zone === 'warm_spring') {
+    // アウターは基本不要
+    if (hasOuter) {
+      score -= outerItems.some(function(i) { return getOuterWeight(i) === 'heavy'; }) ? 10 : 3;
+    }
+  } else if (zone === 'summer') {
+    // アウター厳禁
+    if (hasOuter) score -= 10;
+  }
 
   return score;
 }
@@ -431,8 +485,16 @@ function describeRules(combo, season, temp) {
   });
   if (fabrics.size >= 2) lines.push('🧵 ' + Array.from(fabrics).join('・') + ' の異素材ミックス');
 
-  // 気温
-  lines.push('🌡️ ' + temp + '℃向け' + (temp <= 16 ? '（アウター着用）' : ''));
+  // 気温ゾーン
+  var zone = getTempZone(temp);
+  var outerHint = {
+    cold_winter: '：3層レイヤー（アウター必須）',
+    cold_spring: '：ライトアウター推奨',
+    mild_spring: '：薄手羽織りOK',
+    warm_spring: '：アウターほぼ不要',
+    summer:      '：半袖がベスト',
+  }[zone] || '';
+  lines.push('🌡️ ' + temp + '℃' + outerHint);
 
   return lines.join('　');
 }
@@ -525,6 +587,15 @@ function getFabricGroup(fabricStr) {
   return 'other';
 }
 
+// アウターの重さを heavy / light / thin に分類
+function getOuterWeight(item) {
+  var hay = [item.name, item.category, item.fabric, item.culture, item.brand]
+              .filter(Boolean).join(' ').toLowerCase();
+  if (/down|ダウン|coat|コート/.test(hay)) return 'heavy';
+  if (/cardigan|カーディガン|shirt.?jacket|シャツジャケ/.test(hay)) return 'thin';
+  return 'light'; // トレンチ・デニムジャケット・MA-1 等
+}
+
 /* ===================================================
    ユーティリティ
    =================================================== */
@@ -546,12 +617,34 @@ function seasonLabel(s) {
   return { spring:'春', summer:'夏', fall:'秋', winter:'冬' }[s] || s;
 }
 
+// 気温を5ゾーンに分類
+function getTempZone(temp) {
+  if (temp <= 10) return 'cold_winter';  // ほぼ冬
+  if (temp <= 15) return 'cold_spring';  // 寒い春
+  if (temp <= 20) return 'mild_spring';  // ちょうどいい春
+  if (temp <= 25) return 'warm_spring';  // 暑い春
+  return 'summer';                        // ほぼ夏
+}
+
+function getTempZoneLabel(zone) {
+  return {
+    cold_winter: '〜10℃（ほぼ冬）',
+    cold_spring: '10〜15℃（寒い春）',
+    mild_spring: '15〜20℃（ベストゾーン）',
+    warm_spring: '20〜25℃（暑い春）',
+    summer:      '25℃〜（ほぼ夏）',
+  }[zone] || '';
+}
+
 function getTempComment(temp) {
-  if (temp <= 10) return '寒い日なので重ね着が基本。';
-  if (temp <= 16) return 'やや肌寒い。アウターがあると安心。';
-  if (temp <= 23) return '快適な気温。軽めのレイヤードで。';
-  if (temp <= 28) return '暖かい日。インナーを薄手に。';
-  return '暑い日。通気性のある素材を選んで。';
+  var zone = getTempZone(temp);
+  return {
+    cold_winter: 'コート・ダウン必須。インナー＋中間着＋アウターの3層で防寒を。',
+    cold_spring: 'ライトアウターが活躍。脱ぎ着できる前提で組んで。',
+    mild_spring: '一番おしゃれできる気温帯。シャツ1枚か薄手羽織りで。',
+    warm_spring: '夏っぽさ7割。半袖＋朝晩用の薄い羽織りで。',
+    summer:      '完全に半袖。通気性のある素材を優先して。',
+  }[zone] || '';
 }
 
 function escHtml(s) {
