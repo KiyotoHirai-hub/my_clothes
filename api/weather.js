@@ -6,13 +6,15 @@
 
 const https = require('https');
 
-const WEATHER_API =
-  'https://api.open-meteo.com/v1/forecast' +
-  '?latitude=34.69&longitude=135.50' +
-  '&current=temperature_2m,weathercode' +
-  '&daily=temperature_2m_max,temperature_2m_min' +
-  '&timezone=Asia%2FTokyo' +
-  '&forecast_days=1';
+function buildWeatherUrl(lat, lon) {
+  return 'https://api.open-meteo.com/v1/forecast'
+    + '?latitude='  + lat
+    + '&longitude=' + lon
+    + '&current=temperature_2m,weathercode'
+    + '&daily=temperature_2m_max,temperature_2m_min'
+    + '&timezone=Asia%2FTokyo'
+    + '&forecast_days=1';
+}
 
 const WMO_LABEL = {
   0:'快晴', 1:'晴れ', 2:'一部曇り', 3:'曇り',
@@ -36,9 +38,10 @@ const WMO_EMOJI = {
   95:'⛈️', 96:'⛈️', 99:'⛈️',
 };
 
-function fetchWeather() {
+function fetchWeather(lat, lon) {
   return new Promise((resolve, reject) => {
-    const req = https.get(WEATHER_API, { timeout: 8000 }, (res) => {
+    const url = buildWeatherUrl(lat, lon);
+    const req = https.get(url, { timeout: 8000 }, (res) => {
       let body = '';
       res.setEncoding('utf8');
       res.on('data', chunk => { body += chunk; });
@@ -92,9 +95,11 @@ function fallback() {
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 's-maxage=3600');
+  res.setHeader('Cache-Control', 's-maxage=1800');
+  const lat = parseFloat(req.query && req.query.lat) || 34.69;
+  const lon = parseFloat(req.query && req.query.lon) || 135.50;
   try {
-    const data = await fetchWeather();
+    const data = await fetchWeather(lat, lon);
     res.status(200).json(data);
   } catch (err) {
     res.status(200).json(fallback());

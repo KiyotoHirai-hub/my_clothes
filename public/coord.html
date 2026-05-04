@@ -30,6 +30,16 @@
       text-transform: uppercase; color: var(--text-muted);
       margin-bottom: 10px;
     }
+    .step-label-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .step-label-row .step-label { margin-bottom: 0; }
+    .loc-btn-coord {
+      font-size: 11px; color: var(--text-muted);
+      background: none; border: none; cursor: pointer; padding: 2px 4px;
+    }
+    .loc-btn-coord:hover { color: var(--text); }
 
     /* 天気サマリー */
     .weather-summary {
@@ -269,7 +279,10 @@
   <div class="coord-content">
 
     <!-- 天気サマリー -->
-    <div class="step-label">今日の天気</div>
+    <div class="step-label-row">
+      <div class="step-label">今日の天気</div>
+      <button id="loc-btn" class="loc-btn loc-btn-coord" onclick="openLocSheet()">📍 —</button>
+    </div>
     <div class="weather-summary" id="weather-summary">
       <div class="weather-summary-icon">⏳</div>
       <div class="weather-summary-main">
@@ -307,6 +320,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
   <script src="db.js"></script>
+  <script src="weather-loc.js"></script>
   <script src="coord.js"></script>
 </body>
 </html>

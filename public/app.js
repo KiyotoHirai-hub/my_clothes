@@ -71,7 +71,7 @@ function isTooWarmForZone(item, zone) {
   return /fleece|フリース|down|ダウン|knit|ニット|wool|ウール|corduroy|コーデュロイ|cord/.test(hay);
 }
 
-async function loadWeather() {
+async function loadWeather(lat, lon) {
   const el = {
     date:   document.getElementById('w-date'),
     icon:   document.getElementById('w-icon'),
@@ -82,7 +82,10 @@ async function loadWeather() {
   if (!el.date) return;
 
   try {
-    const res = await fetch('/api/weather');
+    const url = (lat != null && lon != null)
+      ? buildWeatherUrl(lat, lon)
+      : '/api/weather';
+    const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
 
@@ -628,8 +631,16 @@ function showToast(msg) {
 
 if (typeof window !== 'undefined') {
   renderEmojiGrid();
-  configReady.then(() => {
-    loadWeather();
-    loadAndRender();
+
+  // 場所確定 → 天気取得（Supabase不要なので configReady を待たない）
+  initWeatherLoc().then(function(loc) {
+    loadWeather(loc.lat, loc.lon);
   });
+
+  // 場所変更時：天気再取得 ＋ アイテム一覧を再描画（「暑め」バッジ更新）
+  setLocChangeHook(function(loc) {
+    loadWeather(loc.lat, loc.lon).then(function() { loadAndRender(); });
+  });
+
+  configReady.then(() => { loadAndRender(); });
 }

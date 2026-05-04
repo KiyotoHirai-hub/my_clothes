@@ -95,8 +95,17 @@ var allItems       = [];
    =================================================== */
 renderStyleGrid();
 
+// 場所確定 → 天気取得（Supabase不要なので configReady を待たない）
+initWeatherLoc().then(function(loc) {
+  loadWeatherData(loc.lat, loc.lon);
+});
+
+// 場所変更時：天気を再取得
+setLocChangeHook(function(loc) {
+  loadWeatherData(loc.lat, loc.lon);
+});
+
 configReady.then(function() {
-  loadWeatherData();
   loadItems();
 }).catch(function(e) {
   document.getElementById('ws-temp').textContent = '初期化に失敗しました';
@@ -105,9 +114,10 @@ configReady.then(function() {
 /* ===================================================
    天気取得
    =================================================== */
-async function loadWeatherData() {
+async function loadWeatherData(lat, lon) {
   try {
-    var res = await fetch('/api/weather');
+    var url = (lat != null && lon != null) ? buildWeatherUrl(lat, lon) : '/api/weather';
+    var res = await fetch(url);
     if (!res.ok) throw new Error();
     weatherData = await res.json();
     var tempStr = (weatherData.tempMin != null && weatherData.tempMax != null)
