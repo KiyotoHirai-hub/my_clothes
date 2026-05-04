@@ -31,10 +31,11 @@ const CATEGORY_LABEL = {
    状態
    ===================================================== */
 
-let currentSeason = 'all';
-let currentSort   = 'wear_count';
-let currentSearch = '';
-let searchTimer   = null;
+let currentSeason   = 'all';
+let currentSort     = 'wear_count';
+let currentSearch   = '';
+let currentTempZone = null;
+let searchTimer     = null;
 let selEmoji      = EMOJIS[0];
 let modalPhotoB64 = null; // 追加モーダルで選択した写真のBase64
 let editingId     = null; // 編集中のアイテムID
@@ -45,14 +46,29 @@ let csvParsedRows = [];
    ===================================================== */
 
 function detectSeason(month, temp) {
-  // 気温で大まかに判定
   if (temp >= 25) return 'summer';
   if (temp <= 10) return 'winter';
-  // 気温 11〜24℃ は春秋の境界 → 月で区別
   if (month >= 3 && month <= 6)  return 'spring';
   if (month >= 9 && month <= 11) return 'fall';
   if (month >= 7 && month <= 8)  return 'summer';
   return 'winter';
+}
+
+function getTempZone(temp) {
+  if (temp == null) return null;
+  if (temp <= 10) return 'cold_winter';
+  if (temp <= 15) return 'cold_spring';
+  if (temp <= 20) return 'mild_spring';
+  if (temp <= 25) return 'warm_spring';
+  return 'summer';
+}
+
+// 暑い春・夏に不向きな素材かどうか判定
+function isTooWarmForZone(item, zone) {
+  if (!zone || (zone !== 'warm_spring' && zone !== 'summer')) return false;
+  const hay = [item.name, item.fabric, item.category, item.culture, item.brand]
+    .filter(Boolean).join(' ').toLowerCase();
+  return /fleece|フリース|down|ダウン|knit|ニット|wool|ウール|corduroy|コーデュロイ|cord/.test(hay);
 }
 
 async function loadWeather() {
@@ -78,10 +94,13 @@ async function loadWeather() {
       : (d.temp != null ? `${d.temp}℃` : '');
 
     const month  = new Date().getMonth() + 1;
-    const season = detectSeason(month, d.temp ?? d.tempMax);
+    const temp   = d.temp ?? d.tempMax;
+    const season = detectSeason(month, temp);
     const meta   = SEASON_META[season];
     el.season.textContent = meta.label;
     el.season.className   = `weather-season-badge ${meta.cls}`;
+
+    currentTempZone = getTempZone(temp);
 
     // 季節フィルターを自動適用
     const btn = document.querySelector(`.chip.season[data-s="${season}"]`);
@@ -209,6 +228,7 @@ function renderList(items) {
       : `<div class="card-photo-emoji">${item.emoji || '👕'}</div>`;
     const catLabel = CATEGORY_LABEL[item.category] || item.category || '';
     const stars = item.like_count ? '★'.repeat(Math.min(item.like_count, 5)) : '';
+    const tooWarm = isTooWarmForZone(item, currentTempZone);
 
     return `
       <a class="card" href="detail.html?id=${item.id}"
@@ -216,6 +236,7 @@ function renderList(items) {
         <div class="card-photo">
           ${photo}
           ${dots}
+          ${tooWarm ? '<div class="card-temp-warn">🌡️ 暑め</div>' : ''}
         </div>
         <div class="card-body">
           <div class="card-name">${escHtml(item.name)}</div>
