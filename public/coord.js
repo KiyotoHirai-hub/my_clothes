@@ -314,9 +314,9 @@ function findBestCombo(sorted, season, temp, mode) {
 
   // ゾーンに合ったアウターの重さ優先順にソート
   var weightPriority = {
-    cold_winter: { heavy: 0, light: 1, thin: 2 },
-    cold_spring: { light: 0, thin: 1, heavy: 2 },
-    mild_spring: { thin: 0, light: 1, heavy: 2 },
+    cold_winter: { heavy: 0, fleece: 1, light: 2, thin: 3 },
+    cold_spring: { light: 0, fleece: 1, thin: 2, heavy: 3 }, // フリースは寒い春でOK
+    mild_spring: { thin: 0, light: 1, fleece: 2, heavy: 3 }, // フリースは少し暑め
   };
   if (weightPriority[zone]) {
     var order = weightPriority[zone];
@@ -434,24 +434,31 @@ function ruleScore(combo, season, temp) {
       score -= 10;
     }
   } else if (zone === 'cold_spring') {
-    // ライトアウター推奨
+    // ライトアウター or フリース1枚でOK
     if (hasOuter) {
       score += 8;
-      if (outerItems.some(function(i) { return getOuterWeight(i) === 'light'; })) score += 5;
+      var goodColdOuter = outerItems.some(function(i) {
+        var w = getOuterWeight(i); return w === 'light' || w === 'fleece';
+      });
+      if (goodColdOuter) score += 5;
     } else {
       score -= 8;
     }
   } else if (zone === 'mild_spring') {
-    // 薄手羽織りは加点、重いアウターは減点
+    // 薄手羽織りは加点、フリース・重いアウターは減点
     if (hasOuter) {
       if (outerItems.some(function(i) { return getOuterWeight(i) === 'thin'; })) score += 4;
       else if (outerItems.some(function(i) { return getOuterWeight(i) === 'light'; })) score += 2;
+      else if (outerItems.some(function(i) { return getOuterWeight(i) === 'fleece'; })) score -= 1;
       else score -= 3;
     }
   } else if (zone === 'warm_spring') {
-    // アウターは基本不要
+    // フリース・重いアウターは暑すぎる
     if (hasOuter) {
-      score -= outerItems.some(function(i) { return getOuterWeight(i) === 'heavy'; }) ? 10 : 3;
+      var toHotOuter = outerItems.some(function(i) {
+        var w = getOuterWeight(i); return w === 'heavy' || w === 'fleece';
+      });
+      score -= toHotOuter ? 10 : 3;
     }
   } else if (zone === 'summer') {
     // アウター厳禁
@@ -592,6 +599,7 @@ function getOuterWeight(item) {
   var hay = [item.name, item.category, item.fabric, item.culture, item.brand]
               .filter(Boolean).join(' ').toLowerCase();
   if (/down|ダウン|coat|コート/.test(hay)) return 'heavy';
+  if (/fleece|フリース/.test(hay)) return 'fleece'; // 寒い春はOK、暑い春はNG
   if (/cardigan|カーディガン|shirt.?jacket|シャツジャケ/.test(hay)) return 'thin';
   return 'light'; // トレンチ・デニムジャケット・MA-1 等
 }
