@@ -552,7 +552,7 @@ function buildItemsHtml(items) {
     var photo = item.photo_url
       ? '<img src="' + escHtml(item.photo_url) + '" alt="' + escHtml(item.name) + '" loading="lazy" />'
       : '<div class="coord-item-photo-emoji">' + (item.emoji || '👕') + '</div>';
-    return '<div class="coord-item">'
+    return '<a class="coord-item" href="detail.html?id=' + escHtml(item.id) + '">'
       + '<div class="coord-item-photo">' + photo + '</div>'
       + '<div class="coord-item-name">'  + escHtml(item.name  || '') + '</div>'
       + '<div class="coord-item-brand">' + escHtml(item.brand || '') + '</div>'
@@ -561,7 +561,7 @@ function buildItemsHtml(items) {
       + (item.color && item.wear_count != null ? ' · ' : '')
       + (item.wear_count != null ? item.wear_count + '回' : '')
       + '</div>'
-      + '</div>';
+      + '</a>';
   }).join('');
 }
 
